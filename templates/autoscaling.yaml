@@ -1,0 +1,86 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: AutoScaling and Launch Configuration for onboarding
+Parameters:
+  #=======================================================
+  #
+  #                   CloudFormation Parameters
+  #
+  #=======================================================
+  SnsFailureSummaryTopicARN:
+    Type: String
+    Description: SNS topic to post summary message on failure case
+  SnsSuccessSummaryTopicARN:
+    Type: String
+    Description: SNS topic to post summary message on success case
+  S3CodeOriginBucket:
+    Description: Public S3 bucket.
+    Default: open-source-device-onboarding
+    Type: String
+Resources:
+  #=======================================================
+  #
+  #             AutoScaling and Launch template resources
+  #
+  #=======================================================
+  IAMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Path: /
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - Ref: IAMManagedPolicy
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+      Description: Allows EC2 instances to call AWS services on your behalf.
+
+  IAMManagedPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Path: /
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - ssm:PutParameter
+              - ssm:GetParameter
+            Resource:
+              - Fn::Sub: arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/*
+          - Effect: Allow
+            Action:
+              - secretsmanager:GetSecretValue
+            Resource:
+              - Fn::Sub: arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:*
+          - Effect: Allow
+            Action:
+              - apigateway:GET
+            Resource:
+              - Fn::Sub: arn:aws:apigateway:${AWS::Region}::/apikeys
+          - Effect: Allow
+            Action:
+              - sns:Publish
+            Resource:
+              - Ref: SnsSuccessSummaryTopicARN
+              - Ref: SnsFailureSummaryTopicARN
+          - Effect: Allow
+            Action:
+              - s3:GetObject
+            Resource:
+              - Fn::Sub: arn:aws:s3:::${S3CodeOriginBucket}
+              - Fn::Sub: arn:aws:s3:::${S3CodeOriginBucket}/*
+
+  IAMInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: /
+      InstanceProfileName:
+        Ref: IAMRole
+      Roles:
+        - Ref: IAMRole
+
