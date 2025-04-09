@@ -1,5 +1,6 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: SSM parameters for onboarding
+Description: Ssm parameters for onboarding
+
 Parameters:
   #=======================================================
   #
@@ -9,68 +10,75 @@ Parameters:
   ApiGatewayUrl:
     Type: String
     Description: API gateway URL
-  ApiGatewayUrlSSMParamName:
+
+  ApiGatewayUrlSsmParamName:
     Type: String
-    Description: Name of the SSM Param where api gateway URL is stored
+    Description: Name of the Ssm Param where api gateway URL is stored
+
   OnboardingPath:
     Type: String
     Description: API gateway onboarding path
-  OnboardingPathSSMParamName:
+
+  OnboardingPathSsmParamName:
     Type: String
-    Description: Name of the SSM Param where onboarding path is stored
-  ProxyServerSSMParamName:
+    Description: Name of the Ssm Param where onboarding path is stored
+
+  ProxyServerSsmParamName:
     Type: String
-    Description: Name of the SSM Param where proxy server address is stored
-  BreakoutRegionSSMParamName:
+    Description: Name of the Ssm Param where proxy server address is stored
+
+  BreakoutRegionSsmParamName:
     Type: String
-    Description: Name of the SSM Param where Breakout Region is stored
+    Description: Name of the Ssm Param where Breakout Region is stored
+
   BreakoutRegion:
     Type: String
     Description: Breakout Region
+
 Resources:
   #=======================================================
   #
-  #             SSM parameters resources
+  #             Ssm parameters resources
   #
   #=======================================================
-  SSMParameterApiEndpoint:
+  SsmParameterApiEndpoint:
     Type: AWS::SSM::Parameter
     Properties:
       Name:
-        Ref: ApiGatewayUrlSSMParamName
+        Ref: ApiGatewayUrlSsmParamName
       Type: String
       Value:
         Ref: ApiGatewayUrl
       DataType: text
       Tier: Standard
 
-  SSMParameterOnboardingEndpoint:
+  SsmParameterOnboardingEndpoint:
     Type: AWS::SSM::Parameter
     Properties:
       Name:
-        Ref: OnboardingPathSSMParamName
+        Ref: OnboardingPathSsmParamName
       Type: String
       Value:
         Ref: OnboardingPath
       DataType: text
       Tier: Standard
 
-  SSMParameterProxyServer:
+  SsmParameterProxyServer:
     Type: AWS::SSM::Parameter
     Properties:
       Name:
-        Ref: ProxyServerSSMParamName
+        Ref: ProxyServerSsmParamName
       Type: String
       Value: placeholder
       DataType: text
       Description: Onboarding proxy server
       Tier: Standard
 
-  SSMParameterBreakoutRegion:
+  SsmParameterBreakoutRegion:
     Type: AWS::SSM::Parameter
     Properties:
       Name:
-        Ref: BreakoutRegionSSMParamName
+        Ref: BreakoutRegionSsmParamName
       Type: String
       Value:
         Ref: BreakoutRegion

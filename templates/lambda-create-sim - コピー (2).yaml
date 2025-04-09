@@ -9,33 +9,42 @@ Parameters:
   #=======================================================
   LambdaName:
     Type: String
-    Default: create-sim
+#    Default: create-sim
     Description: Lambda name
+
   IotCorePolicyName:
     Type: String
     Description: Policy name
+
   SnsFailureSummaryTopicARN:
     Type: String
     Description: SNS topic to post summary message on failure case
+
   SnsSuccessSummaryTopicARN:
     Type: String
     Description: SNS topic to post summary message on success case
+
   SimTableARN:
     Description: DynamoDB ARN to store SIMs data.
     Type: String
+
   SimsTableName:
     Type: String
     Default: sim-metastore
     Description: DynamoDB table name to store SIMs data
+
   S3LocalBucketArn:
     Description: Arn for S3 bucket used to store the lambda code on customers account.
     Type: String
+
   S3LocalBucketName:
     Description: Name of S3 bucket used to store the lambda code on customers account.
     Type: String
+
   CreateSimLambdaZipPath:
     Description: Zip path for the compressed folder with the lambda code located in local S3.
     Type: String
+
   SqsQueueARN:
     Description: SQS queue ARN
     Type: String

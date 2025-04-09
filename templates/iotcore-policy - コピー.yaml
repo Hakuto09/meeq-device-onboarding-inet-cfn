@@ -1,12 +1,22 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: Generates IOT Core policy for Device Onboarding
+Description: Generates IoT Core policy for Device Onboarding
+
+Parameters:
+  #=======================================================
+  #
+  #                   CloudFormation Parameters
+  #
+  #=======================================================
+  IotcorePolicyName:
+    Type: String
+    Description: IotcorePolicyName
+
 Resources:
   #=======================================================
   #
-  #                    IOT Core Policy
+  #                    IoT Core Policy
   #
   #=======================================================
-
   LambdaExecutionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -34,7 +44,7 @@ Resources:
                 Resource:
                   - "*"
 
-  IotPolicyGenerator:
+  IotPolicyGeneratorFunction:
     Type: AWS::Lambda::Function
     Properties:
       FunctionName: IotPolicyGenerator
@@ -58,7 +68,8 @@ Resources:
                   response.send(event, context, "SUCCESS");
                   return;
               }
-              const policyName = "device-onboarding";
+              # const policyName = "device-onboarding";
+              const policyName = os.environ.get('IOTCORE_POLICY_NAME')
               const region = process.env.AWS_REGION;
               const awsAccountId = context.invokedFunctionArn.split(':')[4];
               const policyDocument = `{
@@ -110,12 +121,16 @@ Resources:
                   response.send(event, context, responseStatus, responseData);
               });
           };
+      Environment:
+        Variables:
+          IOTCORE_POLICY_NAME: !Ref IotcorePolicyName
+
   IoTPolicy:
-    Type: Custom::IotPolicyGenerator
+    Type: Custom::IotPolicyGeneratorFunction
     Properties:
       ServiceToken:
         Fn::GetAtt:
-          - IotPolicyGenerator
+          - IotPolicyGeneratorFunction
           - Arn
 
 Outputs:

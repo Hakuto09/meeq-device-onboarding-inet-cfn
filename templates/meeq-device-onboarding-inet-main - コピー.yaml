@@ -1,0 +1,558 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Main stack for device onboarding service
+
+Mappings:
+  #=======================================================
+  #
+  #                   CloudFormation Mappings
+  #
+  #=======================================================
+  Configuration:
+    BaseConfiguration:
+      ProjectName: meeq-device-onboarding-inet
+      CodebaseVersion: V1.0.0
+#      CodebaseBucket: replace_with_code_bucket_name
+      CodebaseBucketRegion: ap-northeast-1
+ #     SimRetrievalLambdaZipFile: lambda/sim-retrieval.zip
+ #     CreateSimLambdaZipFile: lambda/create-sim.zip
+ #     DisableSimLambdaZipFile: lambda/disable-sim.zip
+ #     DeviceOnboardingLambdaZipFile: lambda/device-onboarding.zip
+      OnboardingApiKeyName: device-onboarding-key
+#      ApiGatewayUrlSsmParamName: openvpn-onboarding-api-gateway-url
+      OnboardingPathSsmParamName: openvpn-onboarding-path
+#      ProxyServerSsmParamName: openvpn-onboarding-proxy-server
+#      BreakoutRegionSsmParamName: breakout-region
+      SnsSuccessTopicName: onboarding-success
+      SnsFailureTopicName: onboarding-failure
+
+# openVPNCredentialsSecretName: open-source-device-onboarding-openvpn-credentials
+
+dev:
+  codeBaseBucket: meeq-device-onboarding-inet-cfn-templates-dev
+
+prod:
+  codeBaseBucket: meeq-device-onboarding-inet-cfn-templates-prod
+
+#  BackendEnvConfig:
+#    dev:
+#      LambdaOfIotcoreToLambdaZipFile: "lambda/amplifyappvuerest-iotcore-to-lambda_dev.zip"
+#      LambdaOfIotcoreLambdaToDdbZipFile: "lambda/amplifyappvuerest-iotcore-lambda-to-ddb_dev.zip"
+#    staging:
+#      LambdaOfIotcoreToLambdaZipFile: "lambda/amplifyappvuerest-iotcore-to-lambda_staging.zip"
+#      LambdaOfIotcoreLambdaToDdbZipFile: "lambda/amplifyappvuerest-iotcore-lambda-to-ddb_staging.zip"
+#    prod:
+#      LambdaOfIotcoreToLambdaZipFile: "lambda/amplifyappvuerest-iotcore-to-lambda_prod.zip"
+#      LambdaOfIotcoreLambdaToDdbZipFile: "lambda/amplifyappvuerest-iotcore-lambda-to-ddb_prod.zip"
+
+Parameters:
+  #=======================================================
+  #
+  #                   CloudFormation Parameters
+  #
+  #=======================================================
+  ManagementApiUsername:
+    Type: String
+    Description: Management API username
+    MinLength: 1
+
+  ManagementApiPassword:
+    Type: String
+    Description: Management API password
+    NoEcho: true
+    MinLength: 1
+
+  LambdaCron:
+    Description: Crontab that determines when CloudWatch Events runs the rule that triggers the Lambda function.
+    Default: cron(0 1 * * ? *)
+    Type: String
+
+  BackendEnv:
+    Description: Stage name of API Gateway deployment
+    Type: String
+    AllowedValues:
+      - dev
+      - staging
+      - prod
+
+  SimOnboardingPath:
+    Description: REST API Path for sim onboarding endpoint
+    Type: String
+    Default: onboarding
+
+  BreakoutRegion:
+    Type: String
+    Default: eu-central-1
+    AllowedValues:
+      - eu-central-1
+      - us-east-1
+      - us-west-1
+      - ap-northeast-1
+    Description: Breakout region configured in the 1NCE Portal
+
+  SnsFailureTopicSubscriptionEmail:
+    Description: Email for Failure Topic Subscription. Empty string or valid e-mail.
+    Type: String
+    AllowedPattern: ^$|[^\s@]+@[^\s@]+\.[^\s@]+
+
+  SnsSuccessTopicSubscriptionEmail:
+    Description: Email for Success Topic Subscription. Empty string or valid e-mail. Verbose !
+    Type: String
+    AllowedPattern: ^$|[^\s@]+@[^\s@]+\.[^\s@]+
+
+Resources:
+  #=======================================================
+  #
+  #                   CloudFormation stacks
+  #
+  #=======================================================
+  CombineParamsStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      Parameters:
+        xxxManagementApiCredentialsSecretARN:
+          Fn::GetAtt:
+            - SecretsManagerStack
+            - Outputs.ManagementApiCredentialsSecretARN
+        xxxLambdaCron:
+          Ref: LambdaCron
+        xxxSimCreateQueueARN:
+          Fn::GetAtt:
+            - SqsResourcesStack
+            - Outputs.SqsSimCreateQueueARN
+      TemplateURL:
+        Fn::Join:
+          - ""
+          - - https://
+            - Fn::FindInMap:
+                - Configuration
+                - BaseConfiguration
+                - ProjectName
+            - -cfn.s3-
+            - Fn::FindInMap:
+                - Configuration
+                - BaseConfiguration
+                - CodebaseBucketRegion
+            - .amazonaws.com/
+            - Fn::FindInMap:
+                - Configuration
+                - BaseConfiguration
+                - CodebaseVersion
+            - /combine-params.yaml
+
+  IotcorePolicyStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL:
+        Fn::Join:
+          - ""
+          - - Fn::GetAtt:
+              - CombineParamsStack
+              - Outputs.CodebaseBucketUrl
+            - /iotcore-policy.yaml
+
+  IotCoreEndpointProviderStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL:
+        Fn::Join:
+          - ""
+          - - Fn::GetAtt:
+              - CombineParamsStack
+              - Outputs.CodebaseBucketUrl
+            - /iotcore-endpoint-provider.yaml
+
+  SqsResourcesStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL:
+        Fn::Join:
+          - ""
+          - - Fn::GetAtt:
+              - CombineParamsStack
+              - Outputs.CodebaseBucketUrl
+            - /sqs.yaml
+
+  DdbCreateTableStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL:
+        Fn::Join:
+          - ""
+          - - Fn::GetAtt:
+              - CombineParamsStack
+              - Outputs.CodebaseBucketUrl
+            - /ddb-create-table.yaml
+
+  LambdaSimRetrievalStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      Parameters:
+        ManagementApiCredentialsSecretARN:
+          Fn::GetAtt:
+            - SecretsManagerStack
+            - Outputs.ManagementApiCredentialsSecretARN
+        LambdaCron:
+          Ref: LambdaCron
+        SimCreateQueueARN:
+          Fn::GetAtt:
+            - SqsResourcesStack
+            - Outputs.SqsSimCreateQueueARN
+        SimCreateQueueURL:
+          Fn::GetAtt:
+            - SqsResourcesStack
+            - Outputs.SqsSimCreateQueueURL
+        SimDisableQueueARN:
+          Fn::GetAtt:
+            - SqsResourcesStack
+            - Outputs.SqsSimDisableQueueARN
+        SimDisableQueueURL:
+          Fn::GetAtt:
+            - SqsResourcesStack
+            - Outputs.SqsSimDisableQueueURL
+        SimTableName:
+          Fn::GetAtt:
+            - DdbCreateTableStack
+            - Outputs.SimTableName
+        SimTableARN:
+          Fn::GetAtt:
+            - DdbCreateTableStack
+            - Outputs.SimTableArn
+        SnsFailureSummaryTopicARN:
+          Fn::GetAtt:
+            - SnsResourcesStack
+            - Outputs.SnsFailureTopicArn
+        S3LocalBucketArn:
+          Fn::GetAtt:
+            - S3BucketAndLocalFilesStack
+            - Outputs.LocalBucketArn
+        S3LocalBucketName:
+          Fn::GetAtt:
+            - S3BucketAndLocalFilesStack
+            - Outputs.LocalBucketName
+        SimRetrievalLambdaZipPath:
+          Fn::GetAtt:
+            - CombineParamsStack
+            - Outputs.SimRetrievalLambdaZipPath
+      TemplateURL:
+        Fn::Join:
+          - ""
+          - - Fn::GetAtt:
+              - CombineParamsStack
+              - Outputs.CodebaseBucketUrl
+            - /lambda-sim-retrieval.yaml
+
+  LambdaCreateSimStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      Parameters:
+        IotCorePolicyName:
+          Fn::GetAtt:
+            - IOTCorePolicyStack
+            - Outputs.IOTCorePolicyName
+        SnsFailureSummaryTopicARN:
+          Fn::GetAtt:
+            - SnsResourcesStack
+            - Outputs.SnsFailureTopicArn
+        SnsSuccessSummaryTopicARN:
+          Fn::GetAtt:
+            - SnsResourcesStack
+            - Outputs.SnsSuccessTopicArn
+        SimsTableName:
+          Fn::GetAtt:
+            - DdbCreateTableStack
+            - Outputs.SimTableName
+        SimTableARN:
+          Fn::GetAtt:
+            - DdbCreateTableStack
+            - Outputs.SimTableArn
+        SqsQueueARN:
+          Fn::GetAtt:
+            - SqsResourcesStack
+            - Outputs.SimCreateQueueARN
+        S3LocalBucketArn:
+          Fn::GetAtt:
+            - S3BucketAndLocalFilesStack
+            - Outputs.LocalBucketArn
+        S3LocalBucketName:
+          Fn::GetAtt:
+            - S3BucketAndLocalFilesStack
+            - Outputs.LocalBucketName
+        CreateSimLambdaZipPath:
+          Fn::GetAtt:
+            - CombineParamsStack
+            - Outputs.CreateSimLambdaZipPath
+      TemplateURL:
+        Fn::Join:
+          - ""
+          - - Fn::GetAtt:
+              - CombineParamsStack
+              - Outputs.CodebaseBucketUrl
+            - /create-sim.yaml
+
+  LambdaDisableSimStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      Parameters:
+        SnsFailureSummaryTopicARN:
+          Fn::GetAtt:
+            - SnsResourcesStack
+            - Outputs.SnsFailureTopicArn
+        SnsSuccessSummaryTopicARN:
+          Fn::GetAtt:
+            - SnsResourcesStack
+            - Outputs.SnsSuccessTopicArn
+        SimsTableName:
+          Fn::GetAtt:
+            - DdbCreateTableStack
+            - Outputs.SimTableName
+        SimTableARN:
+          Fn::GetAtt:
+            - DdbCreateTableStack
+            - Outputs.SimTableArn
+        SqsQueueARN:
+          Fn::GetAtt:
+            - SqsResourcesStack
+            - Outputs.SimDisableQueueARN
+        S3LocalBucketArn:
+          Fn::GetAtt:
+            - S3BucketAndLocalFilesStack
+            - Outputs.LocalBucketArn
+        S3LocalBucketName:
+          Fn::GetAtt:
+            - S3BucketAndLocalFilesStack
+            - Outputs.LocalBucketName
+        DisableSimLambdaZipPath:
+          Fn::GetAtt:
+            - CombineParamsStack
+            - Outputs.DisableSimLambdaZipPath
+      TemplateURL:
+        Fn::Join:
+          - ""
+          - - Fn::GetAtt:
+              - CombineParamsStack
+              - Outputs.CodebaseBucketUrl
+            - /disable-sim.yaml
+
+  LambdaDeviceOnboardingStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      Parameters:
+        SimTableName:
+          Fn::GetAtt:
+            - DdbCreateTableStack
+            - Outputs.SimTableName
+        SimTableARN:
+          Fn::GetAtt:
+            - DdbCreateTableStack
+            - Outputs.SimTableArn
+        S3LocalBucketArn:
+          Fn::GetAtt:
+            - S3BucketAndLocalFilesStack
+            - Outputs.LocalBucketArn
+        S3LocalBucketName:
+          Fn::GetAtt:
+            - S3BucketAndLocalFilesStack
+            - Outputs.LocalBucketName
+        IoTCoreEndpointURL:
+          Fn::GetAtt:
+            - IotCoreEndpointProviderStack
+            - Outputs.IotEndpointAddress
+        DeviceOnboardingLambdaZipPath:
+          Fn::GetAtt:
+            - CombineParamsStack
+            - Outputs.DeviceOnboardingLambdaZipPath
+      TemplateURL:
+        Fn::Join:
+          - ""
+          - - Fn::GetAtt:
+              - CombineParamsStack
+              - Outputs.CodebaseBucketUrl
+            - /device-onboarding.yaml
+
+  ApiGatewayStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      Parameters:
+        LambdaNameDeviceOnboarding:
+          Fn::GetAtt:
+            - LambdaDeviceOnboardingStack
+            - Outputs.LambdaNameDeviceOnboarding
+        LambdaARNDeviceOnboarding:
+          Fn::GetAtt:
+            - LambdaDeviceOnboardingStack
+            - Outputs.LambdaARNDeviceOnboarding
+        OnboardingApiKeyName:
+          Fn::GetAtt:
+            - CombineParamsStack
+            - Outputs.OnboardingApiKeyName
+        APIGatewayStageName:
+          Ref: BackendEnv
+        SimOnboardingPath:
+          Ref: SimOnboardingPath
+      TemplateURL:
+        Fn::Join:
+          - ""
+          - - Fn::GetAtt:
+              - CombineParamsStack
+              - Outputs.CodebaseBucketUrl
+            - /api-gateway.yaml
+
+  SsmResourcesStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      Parameters:
+        ApiGatewayUrl:
+          Fn::GetAtt:
+            - ApiGatewayStack
+            - Outputs.ApiGatewayUrl
+        ApiGatewayUrlSsmParamName:
+          Fn::GetAtt:
+            - CombineParamsStack
+            - Outputs.ApiGatewayUrlSsmParamName
+        OnboardingPath:
+          Fn::Sub: ${BackendEnv}/${SimOnboardingPath}
+        OnboardingPathSsmParamName:
+          Fn::GetAtt:
+            - CombineParamsStack
+            - Outputs.OnboardingPathSsmParamName
+        ProxyServerSsmParamName:
+          Fn::FindInMap:
+            - Configuration
+            - BaseConfiguration
+            - ProxyServerSsmParamName
+        BreakoutRegionSsmParamName:
+          Fn::FindInMap:
+            - Configuration
+            - BaseConfiguration
+            - BreakoutRegionSsmParamName
+        BreakoutRegion:
+          Ref: BreakoutRegion
+      TemplateURL:
+        Fn::Join:
+          - ""
+          - - Fn::GetAtt:
+              - CombineParamsStack
+              - Outputs.CodebaseBucketUrl
+            - /ssm.yaml
+
+  SnsResourcesStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      Parameters:
+        SnsSuccessTopicName:
+          Fn::FindInMap:
+            - Configuration
+            - BaseConfiguration
+            - SnsSuccessTopicName
+        SnsFailureTopicName:
+          Fn::FindInMap:
+            - Configuration
+            - BaseConfiguration
+            - SnsFailureTopicName
+        SnsFailureTopicSubscriptionEmail:
+          Ref: SnsFailureTopicSubscriptionEmail
+        SnsSuccessTopicSubscriptionEmail:
+          Ref: SnsSuccessTopicSubscriptionEmail
+      TemplateURL:
+        Fn::Join:
+          - ""
+          - - Fn::GetAtt:
+              - CombineParamsStack
+              - Outputs.CodebaseBucketUrl
+            - /sns.yaml
+
+  S3BucketAndLocalFilesStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      Parameters:
+        S3CodeOriginBucket:
+          Fn::GetAtt:
+              - CombineParamsStack
+              - Outputs.S3CodeOriginBucket
+        SimRetrievalLambdaZipPath:
+          Fn::Join:
+            - ""
+            - - Fn::FindInMap:
+                  - Configuration
+                  - BaseConfiguration
+                  - CodebaseVersion
+              - /
+              - Fn::FindInMap:
+                  - Configuration
+                  - BaseConfiguration
+                  - SimRetrievalLambdaZipFile
+        CreateSimLambdaZipPath:
+          Fn::Join:
+            - ""
+            - - Fn::FindInMap:
+                  - Configuration
+                  - BaseConfiguration
+                  - CodebaseVersion
+              - /
+              - Fn::FindInMap:
+                  - Configuration
+                  - BaseConfiguration
+                  - CreateSimLambdaZipFile
+        DisableSimLambdaZipPath:
+          Fn::Join:
+            - ""
+            - - Fn::FindInMap:
+                  - Configuration
+                  - BaseConfiguration
+                  - CodebaseVersion
+              - /
+              - Fn::FindInMap:
+                  - Configuration
+                  - BaseConfiguration
+                  - DisableSimLambdaZipFile
+        DeviceOnboardingLambdaZipPath:
+          Fn::Join:
+            - ""
+            - - Fn::FindInMap:
+                  - Configuration
+                  - BaseConfiguration
+                  - CodebaseVersion
+              - /
+              - Fn::FindInMap:
+                  - Configuration
+                  - BaseConfiguration
+                  - DeviceOnboardingLambdaZipFile
+      TemplateURL:
+        Fn::Join:
+          - ""
+          - - Fn::GetAtt:
+              - CombineParamsStack
+              - Outputs.CodebaseBucketUrl
+            - /s3-lambda-code.yaml
+
+  SecretsManagerStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      Parameters:
+        ManagementApiUsername:
+          Ref: ManagementApiUsername
+        ManagementApiPassword:
+          Ref: ManagementApiPassword
+      TemplateURL:
+        Fn::Join:
+          - ""
+          - - Fn::GetAtt:
+              - CombineParamsStack
+              - Outputs.CodebaseBucketUrl
+            - /secrets-manager.yaml
+
+  LambdaInvokeStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      Parameters:
+        FunctionName:
+          Fn::GetAtt:
+            - LambdaSimRetrievalStack
+            - Outputs.FunctionName
+      TemplateURL:
+        Fn::Join:
+          - ""
+          - - Fn::GetAtt:
+              - CombineParamsStack
+              - Outputs.CodebaseBucketUrl
+            - /lambda-invoke.yaml

@@ -1,16 +1,13 @@
 #!/bin/sh
-
 os=$(uname | sed -n '/^Linux/p')
 if [ -z "$os" ]; then
     echo "ERROR: This script is only supported by Linux systems. Actual: $(uname)"
     exit 1
 fi
-
-#if [ -z "$1" ]; then
-#    echo "ERROR: No environment supplied"
-#    exit 1
-#fi
-
+if [ -z "$1" ]; then
+    echo "ERROR: No environment supplied"
+    exit 1
+fi
 node_version=$(node -v | sed -En '/^v([1-9][8-9]|[2-9][[:digit:]])[[:digit:]]*.[[:digit:]]+.[[:digit:]]+$/p')
 if [ -z "$node_version" ]; then
     echo "ERROR: Node 18 or posterior is missing. Actual: $(node -v)"
@@ -65,11 +62,10 @@ npm run zip:all
 echo "Moving files to build folder..."
 cd ..
 rm -rf build/
-#cp -r templates/ build/
-cp -r templates/*.yaml build/
-#cp scripts/ec2-user-data.bash build/
-#cp -r nginxConfig/ build/nginxConfig/
-#cp -r openVpnConfig/ build/openVpnConfig/
+cp -r templates/ build/
+cp scripts/ec2-user-data.bash build/
+cp -r nginxConfig/ build/nginxConfig/
+cp -r openVpnConfig/ build/openVpnConfig/
 mkdir build/lambda
 cp -r applications/dist/**/*.zip build/lambda/
 

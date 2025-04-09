@@ -1,4 +1,4 @@
-version: V2.0.2
+version: V1.0.0
 apiGatewayUrlSSMParamName: openvpn-onboarding-api-gateway-url
 onboardingPathSSMParamName: openvpn-onboarding-path
 proxyServerSSMParamName: openvpn-onboarding-proxy-server
@@ -9,9 +9,9 @@ snsSuccessTopicName: onboarding-success
 snsFailureTopicName: onboarding-failure
 
 dev:
-  codeBaseBucket: hkt-1nce-device-onboarding-dev-cloudformation-templates
+  codeBaseBucket: meeq-device-onboarding-inet-cfn-templates-dev
   codeBaseBucketRegion: ap-northeast-1
 
 prod:
-  codeBaseBucket: hkt-1nce-device-onboarding-prod-cloudformation-templates
+  codeBaseBucket: meeq-device-onboarding-inet-cfn-templates-prod
   codeBaseBucketRegion: ap-northeast-1

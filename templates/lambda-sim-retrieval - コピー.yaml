@@ -9,49 +9,62 @@ Parameters:
   #=======================================================
   LambdaName:
     Type: String
-    Default: sim-retrieval
+#    Default: sim-retrieval
     Description: Lambda name
+
   ManagementApiURL:
     Type: String
     Default: https://api-prod.1nce.com/management-api
     Description: Management API URL
+
   ManagementApiCredentialsSecretARN:
     Type: String
     Description: SSM name for Management API credentials
+
   LambdaCron:
     Description: Crontab that determines when CloudWatch Events runs the rule that triggers the Lambda function.
     Default: cron(0 1 * * ? *)
     Type: String
+
   S3LocalBucketArn:
     Description: Arn for S3 bucket used to store the lambda code on customers account.
     Type: String
+
   S3LocalBucketName:
     Description: Name of S3 bucket used to store the lambda code on customers account.
     Type: String
-  SimRetrievalLambdaZipPath:
-    Description: Zip path for the compressed folder with the lambda code located in local S3.
-    Type: String
+
   SimCreateQueueARN:
     Description: SQS queue ARN to create SIMs
     Type: String
+
   SimCreateQueueURL:
     Description: SQS queue URL to create SIMs
     Type: String
+
   SimDisableQueueARN:
     Description: SQS queue ARN to disable SIMs
     Type: String
+
   SimDisableQueueURL:
     Description: SQS queue URL to disable SIMs
     Type: String
+
   SimTableARN:
     Description: Dynamo DB SIMs table ARN
     Type: String
+
   SimTableName:
     Description: Dynamo DB SIMs table name
     Type: String
+
   SnsFailureSummaryTopicARN:
     Type: String
     Description: SNS topic to post summary message on failure case
+
+  LambdaZipPath:
+    Description: Zip path for the compressed folder with the lambda code located in local S3.
+    Type: String
 
 Mappings:
   RegionToLayerArnMap:
@@ -196,7 +209,7 @@ Resources:
         S3Bucket:
           Ref: S3LocalBucketName
         S3Key:
-          Ref: SimRetrievalLambdaZipPath
+          Ref: LambdaZipPath
       MemorySize: 3072
       Role:
         Fn::GetAtt:

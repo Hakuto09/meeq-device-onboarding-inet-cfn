@@ -9,27 +9,34 @@ Parameters:
   #=======================================================
   LambdaName:
     Type: String
-    Default: device-onboarding
+#    Default: device-onboarding
     Description: Lambda name
+
+  LambdaZipPath:
+    Description: Zip path for the compressed folder with the lambda code located in local S3.
+    Type: String
+
   S3LocalBucketArn:
     Description: Arn for S3 bucket used to store the lambda code on customers account.
     Type: String
+
   S3LocalBucketName:
     Description: Name of S3 bucket used to store the lambda code on customers account.
     Type: String
-  DeviceOnboardingLambdaZipPath:
-    Description: Zip path for the compressed folder with the lambda code located in local S3.
-    Type: String
+
   SimTableARN:
     Description: Dynamo DB SIMs table ARN
     Type: String
+
   SimTableName:
     Description: Dynamo DB SIMs table name
     Type: String
+
   AmazonRootCaURL:
     Description: URL of Amazon Root Certifcate
     Type: String
     Default: https://www.amazontrust.com/repository/AmazonRootCA1.pem
+
   IoTCoreEndpointURL:
     Description: URL of IoT Core Endpoint
     Type: String
@@ -97,7 +104,7 @@ Resources:
         S3Bucket:
           Ref: S3LocalBucketName
         S3Key:
-          Ref: DeviceOnboardingLambdaZipPath
+          Ref: LambdaZipPath
       MemorySize: 128
       Role:
         Fn::GetAtt:
@@ -119,6 +126,7 @@ Outputs:
     Description: The name of the Device Onboarding lambda
     Value:
       Ref: LambdaDeviceOnboardingFunction
+
   LambdaARNDeviceOnboarding:
     Description: Lambda ARN for Device Onboarding
     Value:

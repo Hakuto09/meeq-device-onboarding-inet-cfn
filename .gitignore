@@ -27,3 +27,4 @@ applications/junit.xml
 .DS_Store
 
 build/
+__keep/
