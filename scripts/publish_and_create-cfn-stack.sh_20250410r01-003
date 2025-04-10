@@ -13,7 +13,7 @@ fi
 
 
 template_main=meeq-device-onboarding-inet-main.yaml
-echo "main_yaml=$main_yaml"
+echo "template_main=$template_main"
 
 backend_env=$1
 echo "backend_env=$backend_env"
@@ -80,7 +80,8 @@ aws cloudformation create-stack \
     --stack-name "$cfn_codebase_bucket" \
     --capabilities CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND \
     --parameters ParameterKey=BackendEnv,ParameterValue="$backend_env" \
-    --disable-rollback
+    --disable-rollback #\
+#    --debug
 #                 ParameterKey=CodebaseVersion,ParameterValue="$version" \
 
 ##must have values
