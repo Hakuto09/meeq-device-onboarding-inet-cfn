@@ -1,10 +1,5 @@
 #!/bin/sh
 
-no_build=1
-echo "no_build=$no_build"
-
-
-
 os=$(uname | sed -n '/^Linux/p')
 echo "os=$os"
 if [ -z "$os" ]; then
@@ -61,7 +56,6 @@ fi
 #    exit 1
 #fi
 
-if [ $no_build -ne 1 ]; then
 echo "Installing applications and zipping it..."
 cd applications || exit 1
 npm ci
@@ -69,13 +63,9 @@ echo "Bundling..."
 npm run bundle
 echo "Zipping..."
 npm run zip:all
-cd ..
-else
-echo "No build !!!"
-fi
-
 
 echo "Moving files to build folder..."
+cd ..
 rm -rf build/
 #cp -r templates/ build/
 mkdir build

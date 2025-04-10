@@ -12,12 +12,12 @@ Parameters:
 #    Default: sim-retrieval
     Description: Lambda name
 
-  ManagementApiURL:
+  ManagementApiUrl:
     Type: String
     Default: https://api-prod.1nce.com/management-api
     Description: Management API URL
 
-  ManagementApiCredentialsSecretARN:
+  ManagementApiCredentialsSecretArn:
     Type: String
     Description: SSM name for Management API credentials
 
@@ -27,30 +27,30 @@ Parameters:
     Type: String
 
   S3LocalBucketArn:
-    Description: Arn for S3 bucket used to store the lambda code on customers account.
+    Description: ARN for S3 bucket used to store the lambda code on customers account.
     Type: String
 
   S3LocalBucketName:
     Description: Name of S3 bucket used to store the lambda code on customers account.
     Type: String
 
-  SimCreateQueueARN:
+  SimCreateQueueArn:
     Description: SQS queue ARN to create SIMs
     Type: String
 
-  SimCreateQueueURL:
+  SimCreateQueueUrl:
     Description: SQS queue URL to create SIMs
     Type: String
 
-  SimDisableQueueARN:
+  SimDisableQueueArn:
     Description: SQS queue ARN to disable SIMs
     Type: String
 
-  SimDisableQueueURL:
+  SimDisableQueueUrl:
     Description: SQS queue URL to disable SIMs
     Type: String
 
-  SimTableARN:
+  SimTableArn:
     Description: Dynamo DB SIMs table ARN
     Type: String
 
@@ -58,7 +58,7 @@ Parameters:
     Description: Dynamo DB SIMs table name
     Type: String
 
-  SnsFailureSummaryTopicARN:
+  SnsFailureSummaryTopicArn:
     Type: String
     Description: SNS topic to post summary message on failure case
 
@@ -132,12 +132,12 @@ Resources:
               - Effect: Allow
                 Action: sqs:SendMessage
                 Resource:
-                  - Ref: SimCreateQueueARN
-                  - Ref: SimDisableQueueARN
+                  - Ref: SimCreateQueueArn
+                  - Ref: SimDisableQueueArn
               - Effect: Allow
                 Action: dynamodb:Scan
                 Resource:
-                  Ref: SimTableARN
+                  Ref: SimTableArn
               - Effect: Allow
                 Action:
                   - s3:GetObject
@@ -150,12 +150,12 @@ Resources:
               - Effect: Allow
                 Action: secretsmanager:GetSecretValue
                 Resource:
-                  Ref: ManagementApiCredentialsSecretARN
+                  Ref: ManagementApiCredentialsSecretArn
               - Effect: Allow
                 Action:
                   - sns:Publish
                 Resource:
-                  - Ref: SnsFailureSummaryTopicARN
+                  - Ref: SnsFailureSummaryTopicArn
 
   LambdaSimRetrievalSchedule:
     Type: AWS::Events::Rule
@@ -187,19 +187,19 @@ Resources:
       Environment:
         Variables:
           MANAGEMENT_API_URL:
-            Ref: ManagementApiURL
+            Ref: ManagementApiUrl
           MANAGEMENT_API_CREDENTIALS_SECRET_ARN:
-            Ref: ManagementApiCredentialsSecretARN
+            Ref: ManagementApiCredentialsSecretArn
           SIM_CREATE_QUEUE_URL:
-            Ref: SimCreateQueueURL
+            Ref: SimCreateQueueUrl
           SIM_DISABLE_QUEUE_URL:
-            Ref: SimDisableQueueURL
+            Ref: SimDisableQueueUrl
           SIMS_TABLE:
             Ref: SimTableName
           PARAMETERS_SECRETS_EXTENSION_CACHE_ENABLED: true # setting to false should force to refetch secrets
           SECRETS_MANAGER_TTL: 300 # TTL of a secret in the cache in seconds
           SNS_FAILURE_SUMMARY_TOPIC:
-            Ref: SnsFailureSummaryTopicARN
+            Ref: SnsFailureSummaryTopicArn
       FunctionName:
         Ref: LambdaName
       Handler: index.handler

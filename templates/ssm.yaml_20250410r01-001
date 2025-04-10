@@ -1,0 +1,87 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Ssm parameters for onboarding
+
+Parameters:
+  #=======================================================
+  #
+  #                   CloudFormation Parameters
+  #
+  #=======================================================
+  ApiGatewayUrl:
+    Type: String
+    Description: API gateway URL
+
+  ApiGatewayUrlSsmParamName:
+    Type: String
+    Description: Name of the Ssm Param where api gateway URL is stored
+
+  OnboardingPath:
+    Type: String
+    Description: API gateway onboarding path
+
+  OnboardingPathSsmParamName:
+    Type: String
+    Description: Name of the Ssm Param where onboarding path is stored
+
+  ProxyServerSsmParamName:
+    Type: String
+    Description: Name of the Ssm Param where proxy server address is stored
+
+  BreakoutRegionSsmParamName:
+    Type: String
+    Description: Name of the Ssm Param where Breakout Region is stored
+
+  BreakoutRegion:
+    Type: String
+    Description: Breakout Region
+
+Resources:
+  #=======================================================
+  #
+  #             Ssm parameters resources
+  #
+  #=======================================================
+  SsmParameterApiEndpoint:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name:
+        Ref: ApiGatewayUrlSsmParamName
+      Type: String
+      Value:
+        Ref: ApiGatewayUrl
+      DataType: text
+      Tier: Standard
+
+  SsmParameterOnboardingEndpoint:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name:
+        Ref: OnboardingPathSsmParamName
+      Type: String
+      Value:
+        Ref: OnboardingPath
+      DataType: text
+      Tier: Standard
+
+  SsmParameterProxyServer:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name:
+        Ref: ProxyServerSsmParamName
+      Type: String
+      Value: placeholder
+      DataType: text
+      Description: Onboarding proxy server
+      Tier: Standard
+
+  SsmParameterBreakoutRegion:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name:
+        Ref: BreakoutRegionSsmParamName
+      Type: String
+      Value:
+        Ref: BreakoutRegion
+      DataType: text
+      Description: Breakout Region in 1NCE Portal
+      Tier: Standard

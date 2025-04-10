@@ -37,9 +37,24 @@ Parameters:
     Default: device-onboarding
     Description: Lambda name for device-onboarding
 
+Resources:    # Resourcesが無いとエラーが出るためにダミーリソースとして追加。
+  DummyIAMRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service:
+                - "lambda.amazonaws.com" # 任意のサービス
+            Action:
+              - "sts:AssumeRole"
+      Path: "/"
+      
 Outputs:
   CodebaseBucketUrl:
-    !Sub "https://${ProjectName}-cfn-templates-${BackendEnv}.s3-${CodebaseBucketRegion}.amazonaws.com/${CodebaseVersion}"
+    Value: !Sub "https://${ProjectName}-cfn-templates-${BackendEnv}.s3-${CodebaseBucketRegion}.amazonaws.com/${CodebaseVersion}"
 
 #  SimRetrievalLambdaName:
 #    Fn::Join:
@@ -51,7 +66,7 @@ Outputs:
 #        - "-"
 #        - !Ref BackendEnv
   SimRetrievalLambdaName:
-    !Sub "${SimRetrievalLambdaNameBase}-${ProjectName}-${BackendEnv}"
+    Value: !Sub "${SimRetrievalLambdaNameBase}-${ProjectName}-${BackendEnv}"
 
 #  SimRetrievalLambdaZipPath:
 #    Fn::Join:
@@ -66,60 +81,63 @@ Outputs:
 #        - !Ref BackendEnv
 #        - .zip
   SimRetrievalLambdaZipPath:
-    !Sub "${CodebaseVersion}/${SimRetrievalLambdaNameBase}-${ProjectName}-${BackendEnv}.zip"
+    Value: !Sub "${CodebaseVersion}/${SimRetrievalLambdaNameBase}-${ProjectName}-${BackendEnv}.zip"
 
   CreateSimLambdaName:
-    !Sub "${CreateSimLambdaNameBase}-${ProjectName}-${BackendEnv}"
+    Value: !Sub "${CreateSimLambdaNameBase}-${ProjectName}-${BackendEnv}"
 
   CreateSimLambdaZipPath:
-    !Sub "${CodebaseVersion}/${CreateSimLambdaNameBase}-${ProjectName}-${BackendEnv}.zip"
+    Value: !Sub "${CodebaseVersion}/${CreateSimLambdaNameBase}-${ProjectName}-${BackendEnv}.zip"
 
   DisableSimLambdaName:
-    !Sub "${DisableSimLambdaNameBase}-${ProjectName}-${BackendEnv}"
+    Value: !Sub "${DisableSimLambdaNameBase}-${ProjectName}-${BackendEnv}"
 
   DisableSimLambdaZipPath:
-    !Sub "${CodebaseVersion}/${DisableSimLambdaNameBase}-${ProjectName}-${BackendEnv}.zip"
+    Value: !Sub "${CodebaseVersion}/${DisableSimLambdaNameBase}-${ProjectName}-${BackendEnv}.zip"
 
   DeviceOnboardingLambdaName:
-    !Sub "${DeviceOnboardingLambdaNameBase}-${ProjectName}-${BackendEnv}"
+    Value: !Sub "${DeviceOnboardingLambdaNameBase}-${ProjectName}-${BackendEnv}"
 
   DeviceOnboardingLambdaZipPath:
-    !Sub "${CodebaseVersion}/${DeviceOnboardingLambdaNameBase}-${ProjectName}-${BackendEnv}.zip"
+    Value: !Sub "${CodebaseVersion}/${DeviceOnboardingLambdaNameBase}-${ProjectName}-${BackendEnv}.zip"
 
   OnboardingApiKeyName:
-    !Sub "device-onboarding-key-${ProjectName}-${BackendEnv}"
+    Value: !Sub "device-onboarding-key-${ProjectName}-${BackendEnv}"
 
 #      ApiGatewayUrlSSMParamName: openvpn-onboarding-api-gateway-url
   ApiGatewayUrlSSMParamName:
-    !Sub "device-onboarding-api-gateway-url-${ProjectName}-${BackendEnv}"
+    Value: !Sub "device-onboarding-api-gateway-url-${ProjectName}-${BackendEnv}"
 
 #      OnboardingPathSSMParamName: openvpn-onboarding-path
   OnboardingPathSSMParamName:
-    !Sub "device-onboarding-path-${ProjectName}-${BackendEnv}"
+    Value: !Sub "device-onboarding-path-${ProjectName}-${BackendEnv}"
 
 #      ProxyServerSSMParamName: openvpn-onboarding-proxy-server
 #      BreakoutRegionSSMParamName: breakout-region
 
   SnsSuccessTopicName:
-    !Sub "success-${ProjectName}-${BackendEnv}"
+    Value: !Sub "success-${ProjectName}-${BackendEnv}"
 
   SnsFailureTopicName:
-    !Sub "failure-${ProjectName}-${BackendEnv}"
+    Value: !Sub "failure-${ProjectName}-${BackendEnv}"
 
   SqsSimCreateQueueName:
-    !Sub "sims-create-fifo-${ProjectName}-${BackendEnv}"
+    Value: !Sub "sims-create-fifo-${ProjectName}-${BackendEnv}"
 
   SqsSimDisableQueueName:
-    !Sub "sims-disable-fifo-${ProjectName}-${BackendEnv}"
+    Value: !Sub "sims-disable-fifo-${ProjectName}-${BackendEnv}"
+
+  ManagementApiCredentialsSecretName:
+    Value: !Sub "${ProjectName}-${BackendEnv}-api-credentials"
 
   S3CodeOriginBucket:
-    !Sub "sims-disable-fifo-${ProjectName}-cfn-templates-${BackendEnv}"
+    Value: !Sub "${ProjectName}-cfn-templates-${BackendEnv}"
 
 
 #  ApiGatewayUrl:
 #    Description: URL for API Gateway
 #    Value:
-#      Fn::Sub: https://${ApiGatewayRestApi}.execute-api.${AWS::Region}.amazonaws.com
+#      Fn::Value: !Sub https://${ApiGatewayRestApi}.execute-api.${AWS::Region}.amazonaws.com
 
 #  CombinedParams:
 #    Description: "Combined parameters"

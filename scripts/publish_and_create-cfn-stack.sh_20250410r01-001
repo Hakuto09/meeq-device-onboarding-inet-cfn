@@ -3,7 +3,7 @@
 set -x
 
 
-if [ $# -ne 1 ]; then
+if [ $# -ne 1 ];then
 	echo "sh <backend-env>"
 	echo "Example: sh dev"
 	echo "backend-env list: dev staging prod"
@@ -13,7 +13,7 @@ fi
 
 
 template_main=meeq-device-onboarding-inet-main.yaml
-echo "template_main=$template_main"
+echo "main_yaml=$main_yaml"
 
 backend_env=$1
 echo "backend_env=$backend_env"
@@ -79,16 +79,9 @@ aws cloudformation create-stack \
     --template-url "https://s3.$aws_region.amazonaws.com/$cfn_codebase_bucket/$version/$template_main" \
     --stack-name "$cfn_codebase_bucket" \
     --capabilities CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND \
-    --parameters ParameterKey=BackendEnv,ParameterValue="$backend_env" \
-    --disable-rollback #\
-#    --debug
-#                 ParameterKey=CodebaseVersion,ParameterValue="$version" \
-
-##must have values
-#ManagementApiUsername
-#ManagementApiPassword
-#SnsFailureTopicSubscriptionEmail
-#SnsSuccessTopicSubscriptionEmail
+    --parameters ParameterKey=CodebaseVersion,ParameterValue=$version \
+                  ParameterKey=BackendEnv,ParameterValue=$backend_env \
+    --disable-rollback
 
 echo "Create AWS CloudFormation stacks complete"
 

@@ -53,38 +53,38 @@ Outputs:
   #                 CloudFormation Outputs
   #
   #=======================================================
-  SqsSimCreateQueueURL:
+  SqsCreatedSimCreateQueueUrl:
     Description: URL of Sim Create SQS Queue
     Value:
       Ref: SimCreateQueue
 
-  SqsSimCreateQueueARN:
+  SqsCreatedSimCreateQueueArn:
     Description: ARN of Sim Create Queue
     Value:
       Fn::GetAtt:
         - SimCreateQueue
         - Arn
 
-  SqsSimCreateQueueName:
+  SqsCreatedSimCreateQueueName:
     Description: Name of Sim Create Queue
     Value:
       Fn::GetAtt:
         - SimCreateQueue
         - QueueName
 
-  SqsSimDisableQueueURL:
+  SqsCreatedSimDisableQueueUrl:
     Description: URL of Sim Disable SQS Queue
     Value:
       Ref: SimDisableQueue
 
-  SqsSimDisableQueueARN:
+  SqsCreatedSimDisableQueueArn:
     Description: ARN of Sim Disable Queue
     Value:
       Fn::GetAtt:
         - SimDisableQueue
         - Arn
 
-  SqsSimDisableQueueName:
+  SqsCreatedSimDisableQueueName:
     Description: Name of Sim Disable Queue
     Value:
       Fn::GetAtt:
