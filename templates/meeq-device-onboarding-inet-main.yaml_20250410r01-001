@@ -25,13 +25,16 @@ Mappings:
       SnsSuccessTopicName: onboarding-success
       SnsFailureTopicName: onboarding-failure
 
+#    dev:
+#      codeBaseBucket: meeq-device-onboarding-inet-cfn-templates-dev
+
 # openVPNCredentialsSecretName: open-source-device-onboarding-openvpn-credentials
 
-dev:
-  codeBaseBucket: meeq-device-onboarding-inet-cfn-templates-dev
-
-prod:
-  codeBaseBucket: meeq-device-onboarding-inet-cfn-templates-prod
+#dev:
+#  codeBaseBucket: meeq-device-onboarding-inet-cfn-templates-dev
+#
+#prod:
+#  codeBaseBucket: meeq-device-onboarding-inet-cfn-templates-prod
 
 #  BackendEnvConfig:
 #    dev:
@@ -150,7 +153,7 @@ Resources:
               - Outputs.CodebaseBucketUrl
             - /iotcore-policy.yaml
 
-  IotCoreEndpointProviderStack:
+  IotcoreEndpointProviderStack:
     Type: AWS::CloudFormation::Stack
     Properties:
       TemplateURL:
@@ -187,6 +190,10 @@ Resources:
     Type: AWS::CloudFormation::Stack
     Properties:
       Parameters:
+        LambdaName:
+          Fn::GetAtt:
+            - CombineParamsStack
+            - Outputs.SimRetrievalLambdaName
         ManagementApiCredentialsSecretARN:
           Fn::GetAtt:
             - SecretsManagerStack
@@ -229,7 +236,7 @@ Resources:
           Fn::GetAtt:
             - S3BucketAndLocalFilesStack
             - Outputs.LocalBucketName
-        SimRetrievalLambdaZipPath:
+        LambdaZipPath:
           Fn::GetAtt:
             - CombineParamsStack
             - Outputs.SimRetrievalLambdaZipPath
@@ -245,10 +252,14 @@ Resources:
     Type: AWS::CloudFormation::Stack
     Properties:
       Parameters:
-        IotCorePolicyName:
+        LambdaName:
+          Fn::GetAtt:
+            - CombineParamsStack
+            - Outputs.CreateSimLambdaName
+        IotcorePolicyName:
           Fn::GetAtt:
             - IOTCorePolicyStack
-            - Outputs.IOTCorePolicyName
+            - Outputs.IotcorePolicyName
         SnsFailureSummaryTopicARN:
           Fn::GetAtt:
             - SnsResourcesStack
@@ -277,7 +288,7 @@ Resources:
           Fn::GetAtt:
             - S3BucketAndLocalFilesStack
             - Outputs.LocalBucketName
-        CreateSimLambdaZipPath:
+        LambdaZipPath:
           Fn::GetAtt:
             - CombineParamsStack
             - Outputs.CreateSimLambdaZipPath
@@ -293,6 +304,10 @@ Resources:
     Type: AWS::CloudFormation::Stack
     Properties:
       Parameters:
+        LambdaName:
+          Fn::GetAtt:
+            - CombineParamsStack
+            - Outputs.DisableSimLambdaName
         SnsFailureSummaryTopicARN:
           Fn::GetAtt:
             - SnsResourcesStack
@@ -321,7 +336,7 @@ Resources:
           Fn::GetAtt:
             - S3BucketAndLocalFilesStack
             - Outputs.LocalBucketName
-        DisableSimLambdaZipPath:
+        LambdaZipPath:
           Fn::GetAtt:
             - CombineParamsStack
             - Outputs.DisableSimLambdaZipPath
@@ -337,6 +352,10 @@ Resources:
     Type: AWS::CloudFormation::Stack
     Properties:
       Parameters:
+        LambdaName:
+          Fn::GetAtt:
+            - CombineParamsStack
+            - Outputs.DeviceOnboardingLambdaName
         SimTableName:
           Fn::GetAtt:
             - DdbCreateTableStack
@@ -357,7 +376,7 @@ Resources:
           Fn::GetAtt:
             - IotCoreEndpointProviderStack
             - Outputs.IotEndpointAddress
-        DeviceOnboardingLambdaZipPath:
+        LambdaZipPath:
           Fn::GetAtt:
             - CombineParamsStack
             - Outputs.DeviceOnboardingLambdaZipPath
@@ -477,10 +496,9 @@ Resources:
                   - BaseConfiguration
                   - CodebaseVersion
               - /
-              - Fn::FindInMap:
-                  - Configuration
-                  - BaseConfiguration
-                  - SimRetrievalLambdaZipFile
+              - Fn::GetAtt:
+                - CombineParamsStack
+                - Outputs.SimRetrievalLambdaZipFile
         CreateSimLambdaZipPath:
           Fn::Join:
             - ""
@@ -489,10 +507,9 @@ Resources:
                   - BaseConfiguration
                   - CodebaseVersion
               - /
-              - Fn::FindInMap:
-                  - Configuration
-                  - BaseConfiguration
-                  - CreateSimLambdaZipFile
+              - Fn::GetAtt:
+                - CombineParamsStack
+                - Outputs.CreateSimLambdaZipFile
         DisableSimLambdaZipPath:
           Fn::Join:
             - ""
@@ -501,10 +518,9 @@ Resources:
                   - BaseConfiguration
                   - CodebaseVersion
               - /
-              - Fn::FindInMap:
-                  - Configuration
-                  - BaseConfiguration
-                  - DisableSimLambdaZipFile
+              - Fn::GetAtt:
+                - CombineParamsStack
+                - Outputs.DisableSimLambdaZipFile
         DeviceOnboardingLambdaZipPath:
           Fn::Join:
             - ""
@@ -513,10 +529,9 @@ Resources:
                   - BaseConfiguration
                   - CodebaseVersion
               - /
-              - Fn::FindInMap:
-                  - Configuration
-                  - BaseConfiguration
-                  - DeviceOnboardingLambdaZipFile
+              - Fn::GetAtt:
+                - CombineParamsStack
+                - Outputs.DeviceOnboardingLambdaZipPath
       TemplateURL:
         Fn::Join:
           - ""

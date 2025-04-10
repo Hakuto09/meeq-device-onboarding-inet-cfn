@@ -38,18 +38,8 @@ Parameters:
     Description: Lambda name for device-onboarding
 
 Outputs:
-#  CodebaseBucketUrl:
-#    Fn::Join:
-#      - ""
-#      - 
-#        - "https://"
-#        - !Ref ProjectName
-#        - "-cfn.s3-"
-#        - !Ref CodebaseBucketRegion
-#        - ".amazonaws.com/
-#        - !Ref CodebaseVersion
   CodebaseBucketUrl:
-    !Sub "https://${ProjectName}-cfn.s3-${CodebaseBucketRegion}.amazonaws.com/${CodebaseVersion}"
+    !Sub "https://${ProjectName}-cfn-templates-${BackendEnv}.s3-${CodebaseBucketRegion}.amazonaws.com/${CodebaseVersion}"
 
 #  SimRetrievalLambdaName:
 #    Fn::Join:

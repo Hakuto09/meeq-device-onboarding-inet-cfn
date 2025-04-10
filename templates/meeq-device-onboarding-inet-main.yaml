@@ -25,8 +25,8 @@ Mappings:
       SnsSuccessTopicName: onboarding-success
       SnsFailureTopicName: onboarding-failure
 
-    dev:
-      codeBaseBucket: meeq-device-onboarding-inet-cfn-templates-dev
+#    dev:
+#      codeBaseBucket: meeq-device-onboarding-inet-cfn-templates-dev
 
 # openVPNCredentialsSecretName: open-source-device-onboarding-openvpn-credentials
 
