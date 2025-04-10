@@ -22,8 +22,8 @@ Mappings:
       OnboardingPathSsmParamName: openvpn-onboarding-path
 #      ProxyServerSsmParamName: openvpn-onboarding-proxy-server
 #      BreakoutRegionSsmParamName: breakout-region
-      SnsSuccessTopicName: onboarding-success
-      SnsFailureTopicName: onboarding-failure
+#      SnsSuccessTopicName: onboarding-success
+#      SnsFailureTopicName: onboarding-failure
 
 #    dev:
 #      codeBaseBucket: meeq-device-onboarding-inet-cfn-templates-dev
@@ -53,22 +53,6 @@ Parameters:
   #                   CloudFormation Parameters
   #
   #=======================================================
-  ManagementApiUsername:
-    Type: String
-    Description: Management API username
-    MinLength: 1
-
-  ManagementApiPassword:
-    Type: String
-    Description: Management API password
-    NoEcho: true
-    MinLength: 1
-
-  LambdaCron:
-    Description: Crontab that determines when CloudWatch Events runs the rule that triggers the Lambda function.
-    Default: cron(0 1 * * ? *)
-    Type: String
-
   BackendEnv:
     Description: Stage name of API Gateway deployment
     Type: String
@@ -77,29 +61,49 @@ Parameters:
       - staging
       - prod
 
+  ManagementApiUsername:
+    Description: Management API username
+    Type: String
+    Default: None
+    MinLength: 1
+
+  ManagementApiPassword:
+    Description: Management API password
+    Type: String
+    NoEcho: true
+    Default: None
+    MinLength: 1
+
+  LambdaCron:
+    Description: Crontab that determines when CloudWatch Events runs the rule that triggers the Lambda function.
+    Type: String
+    Default: cron(0 1 * * ? *)
+
   SimOnboardingPath:
     Description: REST API Path for sim onboarding endpoint
     Type: String
-    Default: onboarding
+    Default: meeq-device-onboarding
 
-  BreakoutRegion:
-    Type: String
-    Default: eu-central-1
-    AllowedValues:
-      - eu-central-1
-      - us-east-1
-      - us-west-1
-      - ap-northeast-1
-    Description: Breakout region configured in the 1NCE Portal
-
-  SnsFailureTopicSubscriptionEmail:
-    Description: Email for Failure Topic Subscription. Empty string or valid e-mail.
-    Type: String
-    AllowedPattern: ^$|[^\s@]+@[^\s@]+\.[^\s@]+
+#  BreakoutRegion:
+#    Description: Breakout region configured in the 1NCE Portal
+#    Type: String
+#    Default: eu-central-1
+#    AllowedValues:
+#      - eu-central-1
+#      - us-east-1
+#      - us-west-1
+#      - ap-northeast-1
 
   SnsSuccessTopicSubscriptionEmail:
     Description: Email for Success Topic Subscription. Empty string or valid e-mail. Verbose !
     Type: String
+    Default: test@test.co.jp
+    AllowedPattern: ^$|[^\s@]+@[^\s@]+\.[^\s@]+
+
+  SnsFailureTopicSubscriptionEmail:
+    Description: Email for Failure Topic Subscription. Empty string or valid e-mail.
+    Type: String
+    Default: test@test.co.jp
     AllowedPattern: ^$|[^\s@]+@[^\s@]+\.[^\s@]+
 
 Resources:
@@ -112,16 +116,23 @@ Resources:
     Type: AWS::CloudFormation::Stack
     Properties:
       Parameters:
-        xxxManagementApiCredentialsSecretARN:
-          Fn::GetAtt:
-            - SecretsManagerStack
-            - Outputs.ManagementApiCredentialsSecretARN
-        xxxLambdaCron:
-          Ref: LambdaCron
-        xxxSimCreateQueueARN:
-          Fn::GetAtt:
-            - SqsResourcesStack
-            - Outputs.SqsSimCreateQueueARN
+        ProjectName:
+          Fn::FindInMap:
+            - Configuration
+            - BaseConfiguration
+            - ProjectName
+        CodebaseVersion:
+          Fn::FindInMap:
+            - Configuration
+            - BaseConfiguration
+            - CodebaseVersion
+        CodebaseBucketRegion:
+          Fn::FindInMap:
+            - Configuration
+            - BaseConfiguration
+            - CodebaseBucketRegion
+        BackendEnv:
+          Ref: BackendEnv
       TemplateURL:
         Fn::Join:
           - ""
@@ -258,7 +269,7 @@ Resources:
             - Outputs.CreateSimLambdaName
         IotcorePolicyName:
           Fn::GetAtt:
-            - IOTCorePolicyStack
+            - IotcorePolicyStack
             - Outputs.IotcorePolicyName
         SnsFailureSummaryTopicARN:
           Fn::GetAtt:
@@ -298,7 +309,7 @@ Resources:
           - - Fn::GetAtt:
               - CombineParamsStack
               - Outputs.CodebaseBucketUrl
-            - /create-sim.yaml
+            - /lambda-create-sim.yaml
 
   LambdaDisableSimStack:
     Type: AWS::CloudFormation::Stack
@@ -346,7 +357,7 @@ Resources:
           - - Fn::GetAtt:
               - CombineParamsStack
               - Outputs.CodebaseBucketUrl
-            - /disable-sim.yaml
+            - /lambda-disable-sim.yaml
 
   LambdaDeviceOnboardingStack:
     Type: AWS::CloudFormation::Stack
@@ -372,10 +383,10 @@ Resources:
           Fn::GetAtt:
             - S3BucketAndLocalFilesStack
             - Outputs.LocalBucketName
-        IoTCoreEndpointURL:
+        IotcoreEndpointURL:
           Fn::GetAtt:
-            - IotCoreEndpointProviderStack
-            - Outputs.IotEndpointAddress
+            - IotcoreEndpointProviderStack
+            - Outputs.IotcoreEndpointAddress
         LambdaZipPath:
           Fn::GetAtt:
             - CombineParamsStack
@@ -386,7 +397,7 @@ Resources:
           - - Fn::GetAtt:
               - CombineParamsStack
               - Outputs.CodebaseBucketUrl
-            - /device-onboarding.yaml
+            - /lambda-device-onboarding.yaml
 
   ApiGatewayStack:
     Type: AWS::CloudFormation::Stack
@@ -434,18 +445,18 @@ Resources:
           Fn::GetAtt:
             - CombineParamsStack
             - Outputs.OnboardingPathSsmParamName
-        ProxyServerSsmParamName:
-          Fn::FindInMap:
-            - Configuration
-            - BaseConfiguration
-            - ProxyServerSsmParamName
-        BreakoutRegionSsmParamName:
-          Fn::FindInMap:
-            - Configuration
-            - BaseConfiguration
-            - BreakoutRegionSsmParamName
-        BreakoutRegion:
-          Ref: BreakoutRegion
+#        ProxyServerSsmParamName:
+#          Fn::FindInMap:
+#            - Configuration
+#            - BaseConfiguration
+#            - ProxyServerSsmParamName
+#        BreakoutRegionSsmParamName:
+#          Fn::FindInMap:
+#            - Configuration
+#            - BaseConfiguration
+#            - BreakoutRegionSsmParamName
+#        BreakoutRegion:
+#          Ref: BreakoutRegion
       TemplateURL:
         Fn::Join:
           - ""
@@ -459,15 +470,13 @@ Resources:
     Properties:
       Parameters:
         SnsSuccessTopicName:
-          Fn::FindInMap:
-            - Configuration
-            - BaseConfiguration
-            - SnsSuccessTopicName
+          Fn::GetAtt:
+            - CombineParamsStack
+            - Outputs.SnsSuccessTopicName
         SnsFailureTopicName:
-          Fn::FindInMap:
-            - Configuration
-            - BaseConfiguration
-            - SnsFailureTopicName
+          Fn::GetAtt:
+            - CombineParamsStack
+            - Outputs.SnsFailureTopicName
         SnsFailureTopicSubscriptionEmail:
           Ref: SnsFailureTopicSubscriptionEmail
         SnsSuccessTopicSubscriptionEmail:
@@ -489,49 +498,21 @@ Resources:
               - CombineParamsStack
               - Outputs.S3CodeOriginBucket
         SimRetrievalLambdaZipPath:
-          Fn::Join:
-            - ""
-            - - Fn::FindInMap:
-                  - Configuration
-                  - BaseConfiguration
-                  - CodebaseVersion
-              - /
-              - Fn::GetAtt:
-                - CombineParamsStack
-                - Outputs.SimRetrievalLambdaZipFile
+          Fn::GetAtt:
+            - CombineParamsStack
+            - Outputs.SimRetrievalLambdaZipFile
         CreateSimLambdaZipPath:
-          Fn::Join:
-            - ""
-            - - Fn::FindInMap:
-                  - Configuration
-                  - BaseConfiguration
-                  - CodebaseVersion
-              - /
-              - Fn::GetAtt:
-                - CombineParamsStack
-                - Outputs.CreateSimLambdaZipFile
+          Fn::GetAtt:
+            - CombineParamsStack
+            - Outputs.CreateSimLambdaZipFile
         DisableSimLambdaZipPath:
-          Fn::Join:
-            - ""
-            - - Fn::FindInMap:
-                  - Configuration
-                  - BaseConfiguration
-                  - CodebaseVersion
-              - /
-              - Fn::GetAtt:
-                - CombineParamsStack
-                - Outputs.DisableSimLambdaZipFile
+          Fn::GetAtt:
+            - CombineParamsStack
+            - Outputs.DisableSimLambdaZipPath
         DeviceOnboardingLambdaZipPath:
-          Fn::Join:
-            - ""
-            - - Fn::FindInMap:
-                  - Configuration
-                  - BaseConfiguration
-                  - CodebaseVersion
-              - /
-              - Fn::GetAtt:
-                - CombineParamsStack
-                - Outputs.DeviceOnboardingLambdaZipPath
+          Fn::GetAtt:
+            - CombineParamsStack
+            - Outputs.DeviceOnboardingLambdaZipPath
       TemplateURL:
         Fn::Join:
           - ""

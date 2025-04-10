@@ -34,7 +34,7 @@ Resources:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       Policies:
         - PolicyName:
-            Fn::Sub: iot-core-policy-generator-policy-${AWS::Region}
+            Fn::Sub: iotcore-policy-generator-policy-${AWS::Region}
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
@@ -44,7 +44,7 @@ Resources:
                 Resource:
                   - "*"
 
-  IotPolicyGeneratorFunction:
+  IotcorePolicyGeneratorFunction:
     Type: AWS::Lambda::Function
     Properties:
       FunctionName: IotPolicyGenerator
@@ -125,12 +125,12 @@ Resources:
         Variables:
           IOTCORE_POLICY_NAME: !Ref IotcorePolicyName
 
-  IoTPolicy:
-    Type: Custom::IotPolicyGeneratorFunction
+  IotcorePolicy:
+    Type: Custom::IotcorePolicyGeneratorFunction
     Properties:
       ServiceToken:
         Fn::GetAtt:
-          - IotPolicyGeneratorFunction
+          - IotcorePolicyGeneratorFunction
           - Arn
 
 Outputs:
@@ -139,9 +139,9 @@ Outputs:
   #                 CloudFormation Outputs
   #
   #=======================================================
-  IOTCorePolicyName:
+  IotcorePolicyName:
     Description: The name of the newly created IOT Core Policy
     Value:
       Fn::GetAtt:
-        - IoTPolicy
+        - IotcorePolicy
         - policyName

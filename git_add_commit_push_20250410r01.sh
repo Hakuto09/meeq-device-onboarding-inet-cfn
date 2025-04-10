@@ -16,6 +16,9 @@ BRANCH=$1
 #echo "BRANCH=$BRANCH" > branch.txt
 echo "BRANCH=$BRANCH"
 
+template_main=meeq-device-onboarding-inet-main.yaml
+echo "main_yaml=$main_yaml"
+
 #VERSION=$2
 version=$(yq '.Mappings.Configuration.BaseConfiguration.CodebaseVersion' build/"$template_main")
 #echo "VERSION=$VERSION" > version.txt
