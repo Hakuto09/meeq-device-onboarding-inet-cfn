@@ -137,16 +137,16 @@ Outputs:
   #                 CloudFormation Outputs
   #
   #=======================================================
+  SnsCreatedSuccessTopicArn:
+    Description: Arn for SNS where the onboarding success events will be published
+    Value:
+      Fn::GetAtt:
+        - SnsSuccessTopic
+        - TopicArn
+
   SnsCreatedFailureTopicArn:
     Description: Arn for SNS where the onboarding failures will be published
     Value:
       Fn::GetAtt:
         - SnsFailureTopic
-        - TopicArn
-
-  SnsSuccessTopicArn:
-    Description: Arn for SNS where the onboarding success events will be published
-    Value:
-      Fn::GetAtt:
-        - SnsSuccessTopic
         - TopicArn

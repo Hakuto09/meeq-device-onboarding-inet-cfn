@@ -58,6 +58,11 @@ Parameters:
     Type: String
     AllowedValues:
       - dev
+      - testaa
+      - testbb
+      - testcc
+      - testdd
+      - testee
       - staging
       - prod
 
@@ -77,7 +82,7 @@ Parameters:
   LambdaCron:
     Description: Crontab that determines when CloudWatch Events runs the rule that triggers the Lambda function.
     Type: String
-    Default: cron(0 1 * * ? *)
+    Default: cron(0 2 * * ? *)
 
   SimOnboardingPath:
     Description: REST API Path for sim onboarding endpoint
@@ -163,6 +168,10 @@ Resources:
           Fn::GetAtt:
             - CombineParamsStack
             - Outputs.IotcorePolicyName
+        IotcorePolicyGeneratorFunctionName:
+          Fn::GetAtt:
+            - CombineParamsStack
+            - Outputs.IotcorePolicyGeneratorFunctionName
       TemplateURL:
         Fn::Join:
           - ""
@@ -174,6 +183,11 @@ Resources:
   IotcoreEndpointProviderStack:
     Type: AWS::CloudFormation::Stack
     Properties:
+      Parameters:
+        IotcoreEndpointProviderFunctionName:
+          Fn::GetAtt:
+            - CombineParamsStack
+            - Outputs.IotcoreEndpointProviderFunctionName
       TemplateURL:
         Fn::Join:
           - ""
@@ -201,17 +215,37 @@ Resources:
           Fn::GetAtt:
             - CombineParamsStack
             - Outputs.SimRetrievalLambdaName
+        LambdaZipPath:
+          Fn::GetAtt:
+            - CombineParamsStack
+            - Outputs.SimRetrievalLambdaZipPath
         ManagementApiCredentialsSecretArn:
           Fn::GetAtt:
             - SecretsManagerStack
             - Outputs.ManagementApiCredentialsSecretArn
         LambdaCron:
           Ref: LambdaCron
+        S3LocalBucketName:
+          Fn::GetAtt:
+            - S3BucketAndLocalFilesStack
+            - Outputs.LocalBucketName
+        S3LocalBucketArn:
+          Fn::GetAtt:
+            - S3BucketAndLocalFilesStack
+            - Outputs.LocalBucketArn
+        SimTableName:
+          Fn::GetAtt:
+            - DdbCreateTableStack
+            - Outputs.DdbCreatedSimTableName
+        SimTableArn:
+          Fn::GetAtt:
+            - DdbCreateTableStack
+            - Outputs.DdbCreatedSimTableArn
         SimCreateQueueArn:
           Fn::GetAtt:
             - SqsResourcesStack
             - Outputs.SqsCreatedSimCreateQueueArn
-        SimCreateQueueURL:
+        SimCreateQueueUrl:
           Fn::GetAtt:
             - SqsResourcesStack
             - Outputs.SqsCreatedSimCreateQueueUrl
@@ -219,34 +253,14 @@ Resources:
           Fn::GetAtt:
             - SqsResourcesStack
             - Outputs.SqsCreatedSimDisableQueueArn
-        SimDisableQueueURL:
+        SimDisableQueueUrl:
           Fn::GetAtt:
             - SqsResourcesStack
             - Outputs.SqsCreatedSimDisableQueueUrl
-        SimTableName:
-          Fn::GetAtt:
-            - DdbCreateTableStack
-            - Outputs.SimTableName
-        SimTableArn:
-          Fn::GetAtt:
-            - DdbCreateTableStack
-            - Outputs.SimTableArn
         SnsFailureSummaryTopicArn:
           Fn::GetAtt:
             - SnsResourcesStack
             - Outputs.SnsCreatedFailureTopicArn
-        S3LocalBucketArn:
-          Fn::GetAtt:
-            - S3BucketAndLocalFilesStack
-            - Outputs.LocalBucketArn
-        S3LocalBucketName:
-          Fn::GetAtt:
-            - S3BucketAndLocalFilesStack
-            - Outputs.LocalBucketName
-        LambdaZipPath:
-          Fn::GetAtt:
-            - CombineParamsStack
-            - Outputs.SimRetrievalLambdaZipPath
       TemplateURL:
         Fn::Join:
           - ""
@@ -263,30 +277,14 @@ Resources:
           Fn::GetAtt:
             - CombineParamsStack
             - Outputs.CreateSimLambdaName
+        LambdaZipPath:
+          Fn::GetAtt:
+            - CombineParamsStack
+            - Outputs.CreateSimLambdaZipPath
         IotcorePolicyName:
           Fn::GetAtt:
             - IotcorePolicyStack
-            - Outputs.IotcorePolicyName
-        SnsFailureSummaryTopicArn:
-          Fn::GetAtt:
-            - SnsResourcesStack
-            - Outputs.SnsCreatedFailureTopicArn
-        SnsSuccessSummaryTopicArn:
-          Fn::GetAtt:
-            - SnsResourcesStack
-            - Outputs.SnsCreatedSuccessTopicArn
-        SimsTableName:
-          Fn::GetAtt:
-            - DdbCreateTableStack
-            - Outputs.SimTableName
-        SimTableArn:
-          Fn::GetAtt:
-            - DdbCreateTableStack
-            - Outputs.SimTableArn
-        SqsQueueArn:
-          Fn::GetAtt:
-            - SqsResourcesStack
-            - Outputs.SqsCreatedSimCreateQueueArn
+            - Outputs.IotcoreCreatedPolicyName
         S3LocalBucketArn:
           Fn::GetAtt:
             - S3BucketAndLocalFilesStack
@@ -295,10 +293,26 @@ Resources:
           Fn::GetAtt:
             - S3BucketAndLocalFilesStack
             - Outputs.LocalBucketName
-        LambdaZipPath:
+        SimsTableName:
           Fn::GetAtt:
-            - CombineParamsStack
-            - Outputs.CreateSimLambdaZipPath
+            - DdbCreateTableStack
+            - Outputs.DdbCreatedSimTableName
+        SimTableArn:
+          Fn::GetAtt:
+            - DdbCreateTableStack
+            - Outputs.DdbCreatedSimTableArn
+        SqsQueueArn:
+          Fn::GetAtt:
+            - SqsResourcesStack
+            - Outputs.SqsCreatedSimCreateQueueArn
+        SnsSuccessSummaryTopicArn:
+          Fn::GetAtt:
+            - SnsResourcesStack
+            - Outputs.SnsCreatedSuccessTopicArn
+        SnsFailureSummaryTopicArn:
+          Fn::GetAtt:
+            - SnsResourcesStack
+            - Outputs.SnsCreatedFailureTopicArn
       TemplateURL:
         Fn::Join:
           - ""
@@ -315,6 +329,22 @@ Resources:
           Fn::GetAtt:
             - CombineParamsStack
             - Outputs.DisableSimLambdaName
+        LambdaZipPath:
+          Fn::GetAtt:
+            - CombineParamsStack
+            - Outputs.DisableSimLambdaZipPath
+        SimsTableName:
+          Fn::GetAtt:
+            - DdbCreateTableStack
+            - Outputs.DdbCreatedSimTableName
+        SimTableArn:
+          Fn::GetAtt:
+            - DdbCreateTableStack
+            - Outputs.DdbCreatedSimTableArn
+        SqsQueueArn:
+          Fn::GetAtt:
+            - SqsResourcesStack
+            - Outputs.SqsCreatedSimDisableQueueArn
         SnsSuccessSummaryTopicArn:
           Fn::GetAtt:
             - SnsResourcesStack
@@ -323,18 +353,6 @@ Resources:
           Fn::GetAtt:
             - SnsResourcesStack
             - Outputs.SnsCreatedFailureTopicArn
-        SimsTableName:
-          Fn::GetAtt:
-            - DdbCreateTableStack
-            - Outputs.SimTableName
-        SimTableArn:
-          Fn::GetAtt:
-            - DdbCreateTableStack
-            - Outputs.SimTableArn
-        SqsQueueArn:
-          Fn::GetAtt:
-            - SqsResourcesStack
-            - Outputs.SqsCreatedSimDisableQueueArn
         S3LocalBucketArn:
           Fn::GetAtt:
             - S3BucketAndLocalFilesStack
@@ -343,10 +361,6 @@ Resources:
           Fn::GetAtt:
             - S3BucketAndLocalFilesStack
             - Outputs.LocalBucketName
-        LambdaZipPath:
-          Fn::GetAtt:
-            - CombineParamsStack
-            - Outputs.DisableSimLambdaZipPath
       TemplateURL:
         Fn::Join:
           - ""
@@ -363,30 +377,30 @@ Resources:
           Fn::GetAtt:
             - CombineParamsStack
             - Outputs.DeviceOnboardingLambdaName
-        SimTableName:
-          Fn::GetAtt:
-            - DdbCreateTableStack
-            - Outputs.SimTableName
-        SimTableArn:
-          Fn::GetAtt:
-            - DdbCreateTableStack
-            - Outputs.SimTableArn
-        S3LocalBucketArn:
-          Fn::GetAtt:
-            - S3BucketAndLocalFilesStack
-            - Outputs.LocalBucketArn
-        S3LocalBucketName:
-          Fn::GetAtt:
-            - S3BucketAndLocalFilesStack
-            - Outputs.LocalBucketName
-        IotcoreEndpointURL:
-          Fn::GetAtt:
-            - IotcoreEndpointProviderStack
-            - Outputs.IotcoreEndpointAddress
         LambdaZipPath:
           Fn::GetAtt:
             - CombineParamsStack
             - Outputs.DeviceOnboardingLambdaZipPath
+        SimTableName:
+          Fn::GetAtt:
+            - DdbCreateTableStack
+            - Outputs.DdbCreatedSimTableName
+        SimTableArn:
+          Fn::GetAtt:
+            - DdbCreateTableStack
+            - Outputs.DdbCreatedSimTableArn
+        S3LocalBucketName:
+          Fn::GetAtt:
+            - S3BucketAndLocalFilesStack
+            - Outputs.LocalBucketName
+        S3LocalBucketArn:
+          Fn::GetAtt:
+            - S3BucketAndLocalFilesStack
+            - Outputs.LocalBucketArn
+        IotcoreEndpointUrl:
+          Fn::GetAtt:
+            - IotcoreEndpointProviderStack
+            - Outputs.IotcoreEndpointAddress
       TemplateURL:
         Fn::Join:
           - ""
@@ -402,7 +416,7 @@ Resources:
         LambdaDeviceOnboardingName:
           Fn::GetAtt:
             - LambdaDeviceOnboardingStack
-            - Outputs.LambdaNameDeviceOnboarding
+            - Outputs.LambdaDeviceOnboardingName
         LambdaDeviceOnboardingArn:
           Fn::GetAtt:
             - LambdaDeviceOnboardingStack

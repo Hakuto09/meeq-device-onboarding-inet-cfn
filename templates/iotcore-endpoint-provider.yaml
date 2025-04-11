@@ -1,6 +1,16 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Description: Contains custom resource lambda which provides IOT Core Endpoint URL as output
 
+Parameters:
+  #=======================================================
+  #
+  #                   CloudFormation Parameters
+  #
+  #=======================================================
+  IotcoreEndpointProviderFunctionName:
+    Type: String
+    Description: Lambda name
+
 Resources:
   #=======================================================
   #
@@ -37,7 +47,9 @@ Resources:
   IotcoreEndpointProviderFunction:
     Type: AWS::Lambda::Function
     Properties:
-      FunctionName: IotcoreEndpointUrlProvider
+#      FunctionName: IotcoreEndpointUrlProvider
+      FunctionName:
+        Ref: IotcoreEndpointProviderFunctionName
       Handler: index.handler
       Runtime: nodejs18.x
       MemorySize: 128

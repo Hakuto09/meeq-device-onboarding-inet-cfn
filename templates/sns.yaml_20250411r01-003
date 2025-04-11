@@ -31,16 +31,16 @@ Conditions:
   #            Conditions
   #
   #=======================================================
-  SNSFailureTopicSubscriptionEmailExists:
+  SnsFailureTopicSubscriptionEmailExists:
     Fn::Not:
     - Fn::Equals:
-        - Ref: SNSFailureTopicSubscriptionEmail
+        - Ref: SnsFailureTopicSubscriptionEmail
         - ""
 
-  SNSSuccessTopicSubscriptionEmailExists:
+  SnsSuccessTopicSubscriptionEmailExists:
     Fn::Not:
       - Fn::Equals:
-        - Ref: SNSSuccessTopicSubscriptionEmail
+        - Ref: SnsSuccessTopicSubscriptionEmail
         - ""
 
 Resources:
@@ -49,39 +49,39 @@ Resources:
   #             SNS resources
   #
   #=======================================================
-  SNSFailureTopic:
+  SnsFailureTopic:
     Type: AWS::SNS::Topic
     Properties:
       TopicName:
-        Ref: SNSFailureTopicName
+        Ref: SnsFailureTopicName
 
-  SNSFailureTopicSubscription:
+  SnsFailureTopicSubscription:
     Type: AWS::SNS::Subscription
     Properties:
       Endpoint:
-        Ref: SNSFailureTopicSubscriptionEmail
+        Ref: SnsFailureTopicSubscriptionEmail
       Protocol: email
       TopicArn:
-        Ref: SNSFailureTopic
-    Condition: SNSFailureTopicSubscriptionEmailExists
+        Ref: SnsFailureTopic
+    Condition: SnsFailureTopicSubscriptionEmailExists
 
-  SNSSuccessTopic:
+  SnsSuccessTopic:
     Type: AWS::SNS::Topic
     Properties:
       TopicName:
-        Ref: SNSSuccessTopicName
+        Ref: SnsSuccessTopicName
 
-  SNSSuccessTopicSubscription:
+  SnsSuccessTopicSubscription:
     Type: AWS::SNS::Subscription
     Properties:
       Endpoint:
-        Ref: SNSSuccessTopicSubscriptionEmail
+        Ref: SnsSuccessTopicSubscriptionEmail
       Protocol: email
       TopicArn:
-        Ref: SNSSuccessTopic
-    Condition: SNSSuccessTopicSubscriptionEmailExists
+        Ref: SnsSuccessTopic
+    Condition: SnsSuccessTopicSubscriptionEmailExists
 
-  SNSTopicPolicy:
+  SnsTopicPolicy:
     Type: AWS::SNS::TopicPolicy
     Properties:
       PolicyDocument:
@@ -102,7 +102,7 @@ Resources:
               AWS:
                 Fn::Sub: ${AWS::AccountId}
             Resource:
-              - Ref: SNSFailureTopic
+              - Ref: SnsFailureTopic
             Condition:
               StringEquals:
                 AWS:SourceOwner:
@@ -122,14 +122,14 @@ Resources:
               AWS:
                 Fn::Sub: ${AWS::AccountId}
             Resource:
-              - Ref: SNSSuccessTopic
+              - Ref: SnsSuccessTopic
             Condition:
               StringEquals:
                 AWS:SourceOwner:
                   Fn::Sub: ${AWS::AccountId}
       Topics:
-        - Ref: SNSFailureTopic
-        - Ref: SNSSuccessTopic
+        - Ref: SnsFailureTopic
+        - Ref: SnsSuccessTopic
 
 Outputs:
   #=======================================================
@@ -137,16 +137,16 @@ Outputs:
   #                 CloudFormation Outputs
   #
   #=======================================================
-  SNSFailureTopicArn:
-    Description: Arn for SNS where the onboarding failures will be published
-    Value:
-      Fn::GetAtt:
-        - SNSFailureTopic
-        - TopicArn
-
-  SNSSuccessTopicArn:
+  SnsCreatedSuccessTopicArn:
     Description: Arn for SNS where the onboarding success events will be published
     Value:
       Fn::GetAtt:
-        - SNSSuccessTopic
+        - SnsSuccessTopic
+        - TopicArn
+
+  SnsCreatedFailureTopicArn:
+    Description: Arn for SNS where the onboarding failures will be published
+    Value:
+      Fn::GetAtt:
+        - SnsFailureTopic
         - TopicArn

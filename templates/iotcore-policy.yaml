@@ -9,7 +9,11 @@ Parameters:
   #=======================================================
   IotcorePolicyName:
     Type: String
-    Description: IotcorePolicyName
+    Description: Iotcore Policy Name
+
+  IotcorePolicyGeneratorFunctionName:
+    Type: String
+    Description: Iotcore Policy Generator Function Name
 
 Resources:
   #=======================================================
@@ -48,7 +52,9 @@ Resources:
   IotcorePolicyGeneratorFunction:
     Type: AWS::Lambda::Function
     Properties:
-      FunctionName: IotcorePolicyGenerator
+#      FunctionName: IotcorePolicyGenerator
+      FunctionName:
+        Ref: IotcorePolicyGeneratorFunctionName
       Handler: index.handler
       Runtime: nodejs18.x
       MemorySize: 128
@@ -69,8 +75,8 @@ Resources:
                   response.send(event, context, "SUCCESS");
                   return;
               }
-              # const policyName = "device-onboarding";
-              const policyName = os.environ.get('IOTCORE_POLICY_NAME')
+              // const policyName = "device-onboarding";
+              const policyName = process.env.IOTCORE_POLICY_NAME;
               const region = process.env.AWS_REGION;
               const awsAccountId = context.invokedFunctionArn.split(':')[4];
               const policyDocument = `{
@@ -115,7 +121,7 @@ Resources:
                       responseData = { Error: "createIoTPolicy call failed" };
                       console.error(responseData.Error + ":\n", err);
                   }
-                  else  {
+                  else {
                       responseStatus = "SUCCESS";
                       responseData = { policyName: data.policyName };
                       console.log('Response data: ' + JSON.stringify(responseData));

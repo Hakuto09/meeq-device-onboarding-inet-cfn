@@ -54,6 +54,7 @@ Resources:
                 Action:
                   - dynamodb:ListTables
                   - dynamodb:CreateTable
+                  - dynamodb:DescribeTable
                 Resource: "*"
         - PolicyName: 'LambdaOutputLogsPolicy'
           PolicyDocument:
@@ -111,6 +112,8 @@ Resources:
                           'WriteCapacityUnits': 5,
                       }
                   )
+                  print("After create_table():", " table ", table)
+
                   #return {
                   #    'statusCode': 200,
                   #    'body': json.dumps(f'Table {table_name} created successfully.'),
@@ -124,6 +127,10 @@ Resources:
                   print("Table create OK")
                   cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData)
               else :
+                  # テーブルの詳細を取得
+                  table = dynamodb.describe_table(TableName=table_name)
+                  print("After describe_table():", " table ", table)
+
                   ## table_arn = dynamodb.describe_table(TableName=table_name)['Table']['TableArn']
                   #return {
                   #    'statusCode': 200,
@@ -133,8 +140,8 @@ Resources:
                   #    'TableArn': None,
                   #}
                   responseData = {}
-                  responseData['TableName'] = None
-                  responseData['TableArn'] = None
+                  responseData['TableName'] = table['Table']['TableName']
+                  responseData['TableArn'] = table['Table']['TableArn']
                   #cfnresponse.send(event, context, cfnresponse.None, responseData, "CustomResourcePhysicalID")
                   print("No need to create Table because already exist")
                   cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData)

@@ -19,12 +19,12 @@ Parameters:
     Description: Api Key name for API Gateway
     Type: String
 
-  LambdaNameDeviceOnboarding:
+  LambdaDeviceOnboardingName:
     Type: String
     Default: device-onboarding
     Description: Lambda name for Device Onboarding
 
-  LambdaARNDeviceOnboarding:
+  LambdaDeviceOnboardingArn:
     Type: String
     Description: Lambda ARN for Device Onboarding
 
@@ -86,13 +86,13 @@ Resources:
         TimeoutInMillis: 29000
         Type: AWS_PROXY
         Uri:
-          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${LambdaNameDeviceOnboarding}/invocations
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${LambdaDeviceOnboardingName}/invocations
 
   ApiGatewayLambdaInvokePermission:
     Type: AWS::Lambda::Permission
     Properties:
       FunctionName:
-        Ref: LambdaARNDeviceOnboarding
+        Ref: LambdaDeviceOnboardingArn
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
       SourceAccount:

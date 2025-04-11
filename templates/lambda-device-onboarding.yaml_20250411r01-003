@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: Create lambda to handle the process of disable SIMs
+Description: Create lambda to handle the SIM retrieval process
 
 Parameters:
   #=======================================================
@@ -9,40 +9,36 @@ Parameters:
   #=======================================================
   LambdaName:
     Type: String
-#    Default: disable-sim
+#    Default: device-onboarding
     Description: Lambda name
 
   LambdaZipPath:
     Description: Zip path for the compressed folder with the lambda code located in local S3.
     Type: String
 
-  SnsFailureSummaryTopicARN:
-    Type: String
-    Description: SNS topic to post summary message on failure case
-
-  SnsSuccessSummaryTopicARN:
-    Type: String
-    Description: SNS topic to post summary message on success case
-
-  SimTableARN:
-    Description: DynamoDB ARN to store SIMs data.
+  SimTableName:
+    Description: Dynamo DB SIMs table name
     Type: String
 
-  SimsTableName:
-    Type: String
-    Default: sim-metastore
-    Description: DynamoDB table name to store SIMs data
-
-  S3LocalBucketArn:
-    Description: Arn for S3 bucket used to store the lambda code on customers account.
+  SimTableArn:
+    Description: Dynamo DB SIMs table ARN
     Type: String
 
   S3LocalBucketName:
     Description: Name of S3 bucket used to store the lambda code on customers account.
     Type: String
 
-  SqsQueueARN:
-    Description: SQS queue ARN
+  S3LocalBucketArn:
+    Description: Arn for S3 bucket used to store the lambda code on customers account.
+    Type: String
+
+  AmazonRootCaURL:
+    Description: URL of Amazon Root Certifcate
+    Type: String
+    Default: https://www.amazontrust.com/repository/AmazonRootCA1.pem
+
+  IotcoreEndpointUrl:
+    Description: URL of IoT Core Endpoint
     Type: String
 
 Resources:
@@ -51,12 +47,13 @@ Resources:
   #                   Lambda resources
   #
   #=======================================================
-  LambdaDisableSimIAMRole:
+  LambdaDeviceOnboardingIAMRole:
     Type: AWS::IAM::Role
     Properties:
       Path: /
+      MaxSessionDuration: 3600
       AssumeRolePolicyDocument:
-        Version: 2012-10-17
+        Version: "2012-10-17"
         Statement:
           - Effect: Allow
             Principal:
@@ -67,29 +64,14 @@ Resources:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       Policies:
         - PolicyName:
-            Fn::Sub: disable-sim-policy-${AWS::Region}
+            Fn::Sub: sim-retrieval-policy-${AWS::Region}
           PolicyDocument:
-            Version: 2012-10-17
+            Version: "2012-10-17"
             Statement:
               - Effect: Allow
-                Action:
-                  - sqs:ReceiveMessage
-                  - sqs:DeleteMessage
-                  - sqs:GetQueueAttributes
-                  - sqs:ChangeMessageVisibility
+                Action: dynamodb:GetItem
                 Resource:
-                  Ref: SqsQueueARN
-              - Effect: Allow
-                Action:
-                  - sns:Publish
-                Resource:
-                  - Ref: SnsSuccessSummaryTopicARN
-                  - Ref: SnsFailureSummaryTopicARN
-              - Effect: Allow
-                Action:
-                  - dynamodb:UpdateItem
-                Resource:
-                  Ref: SimTableARN
+                  Ref: SimTableArn
               - Effect: Allow
                 Action:
                   - s3:GetObject
@@ -100,18 +82,19 @@ Resources:
                   - Fn::Sub: ${S3LocalBucketArn}/*
                   - Ref: S3LocalBucketArn
 
-  LambdaDisableSimFunction:
+  LambdaDeviceOnboardingFunction:
     Type: AWS::Lambda::Function
     Properties:
-      Description: Disable SIMs in database
+      Timeout: 30
+      Description: Device Onboarding function
       Environment:
         Variables:
-          SNS_FAILURE_SUMMARY_TOPIC:
-            Ref: SnsFailureSummaryTopicARN
-          SNS_SUCCESS_SUMMARY_TOPIC:
-            Ref: SnsSuccessSummaryTopicARN
+          AMAZON_ROOTCA_URL:
+            Ref: AmazonRootCaURL
           SIMS_TABLE:
-            Ref: SimsTableName
+            Ref: SimTableName
+          IOT_CORE_ENDPOINT_URL:
+            Ref: IotcoreEndpointUrl
       FunctionName:
         Ref: LambdaName
       Handler: index.handler
@@ -125,7 +108,7 @@ Resources:
       MemorySize: 128
       Role:
         Fn::GetAtt:
-          - LambdaDisableSimIAMRole
+          - LambdaDeviceOnboardingIAMRole
           - Arn
       Runtime: nodejs18.x
       TracingConfig:
@@ -133,13 +116,20 @@ Resources:
       EphemeralStorage:
         Size: 512
 
-  LambdaDisableSimFunctionEventSourceMapping:
-    Type: AWS::Lambda::EventSourceMapping
-    Properties:
-      BatchSize: 10
-      Enabled: true
-      EventSourceArn:
-        Ref: SqsQueueARN
-      FunctionName:
-        Ref: LambdaName
-    DependsOn: LambdaDisableSimFunction
+Outputs:
+  #=======================================================
+  #
+  #                 CloudFormation Outputs
+  #
+  #=======================================================
+  LambdaDeviceOnboardingName:
+    Description: The name of the Device Onboarding lambda
+    Value:
+      Ref: LambdaDeviceOnboardingFunction
+
+  LambdaDeviceOnboardingArn:
+    Description: Lambda ARN for Device Onboarding
+    Value:
+      Fn::GetAtt:
+        - LambdaDeviceOnboardingFunction
+        - Arn

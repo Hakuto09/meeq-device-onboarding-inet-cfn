@@ -12,6 +12,10 @@ Parameters:
 #    Default: sim-retrieval
     Description: Lambda name
 
+  LambdaZipPath:
+    Description: Zip path for the compressed folder with the lambda code located in local S3.
+    Type: String
+
   ManagementApiUrl:
     Type: String
     Default: https://api-prod.1nce.com/management-api
@@ -26,12 +30,20 @@ Parameters:
     Default: cron(0 1 * * ? *)
     Type: String
 
+  S3LocalBucketName:
+    Description: Name of S3 bucket used to store the lambda code on customers account.
+    Type: String
+
   S3LocalBucketArn:
     Description: ARN for S3 bucket used to store the lambda code on customers account.
     Type: String
 
-  S3LocalBucketName:
-    Description: Name of S3 bucket used to store the lambda code on customers account.
+  SimTableName:
+    Description: Dynamo DB SIMs table name
+    Type: String
+
+  SimTableArn:
+    Description: Dynamo DB SIMs table ARN
     Type: String
 
   SimCreateQueueArn:
@@ -50,21 +62,9 @@ Parameters:
     Description: SQS queue URL to disable SIMs
     Type: String
 
-  SimTableArn:
-    Description: Dynamo DB SIMs table ARN
-    Type: String
-
-  SimTableName:
-    Description: Dynamo DB SIMs table name
-    Type: String
-
   SnsFailureSummaryTopicArn:
     Type: String
     Description: SNS topic to post summary message on failure case
-
-  LambdaZipPath:
-    Description: Zip path for the compressed folder with the lambda code located in local S3.
-    Type: String
 
 Mappings:
   RegionToLayerArnMap:

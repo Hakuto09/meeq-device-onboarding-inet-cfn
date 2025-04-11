@@ -54,7 +54,18 @@ Resources:
                 Action:
                   - dynamodb:ListTables
                   - dynamodb:CreateTable
+                  - dynamodb:DescribeTable
                 Resource: "*"
+        - PolicyName: 'LambdaOutputLogsPolicy'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: 'Allow'
+                Action:
+                  - 'logs:CreateLogGroup'
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                Resource: 'arn:aws:logs:*:*:*'
 
   CreateTableFunction:
     Type: AWS::Lambda::Function
@@ -63,14 +74,16 @@ Resources:
       Role: !GetAtt CreateTableLambdaExecutionRole.Arn
       Code:
         ZipFile: |
+          import os
           import boto3
           import json
           import cfnresponse
 
           def handler(event, context):
-              print("REQUEST RECEIVED: ", json.stringify(event));
-              if event.RequestType == "Delete" :
-                  cfnresponse.send(event, context, cfnresponse.SUCCESS)
+              print("event ", event, " context ", context)
+              if event['RequestType'] == "Delete" :
+                  responseData = {}
+                  cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData)
                   return
 
               dynamodb = boto3.client('dynamodb')
@@ -99,6 +112,8 @@ Resources:
                           'WriteCapacityUnits': 5,
                       }
                   )
+                  print("After create_table():", " table ", table)
+
                   #return {
                   #    'statusCode': 200,
                   #    'body': json.dumps(f'Table {table_name} created successfully.'),
@@ -109,8 +124,13 @@ Resources:
                   responseData['TableName'] = table['TableDescription']['TableName']
                   responseData['TableArn'] = table['TableDescription']['TableArn']
                   #cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData, "CustomResourcePhysicalID")
+                  print("Table create OK")
                   cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData)
               else :
+                  # テーブルの詳細を取得
+                  table = dynamodb.describe_table(TableName=table_name)
+                  print("After describe_table():", " table ", table)
+
                   ## table_arn = dynamodb.describe_table(TableName=table_name)['Table']['TableArn']
                   #return {
                   #    'statusCode': 200,
@@ -120,10 +140,11 @@ Resources:
                   #    'TableArn': None,
                   #}
                   responseData = {}
-                  responseData['TableName'] = None
-                  responseData['TableArn'] = None
+                  responseData['TableName'] = table['Table']['TableName']
+                  responseData['TableArn'] = table['Table']['TableArn']
                   #cfnresponse.send(event, context, cfnresponse.None, responseData, "CustomResourcePhysicalID")
-                  cfnresponse.send(event, context, cfnresponse.FAILED, responseData)
+                  print("No need to create Table because already exist")
+                  cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData)
       Runtime: python3.8
       Timeout: 30
       Environment:

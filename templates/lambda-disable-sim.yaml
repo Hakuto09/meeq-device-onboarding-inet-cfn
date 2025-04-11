@@ -16,22 +16,14 @@ Parameters:
     Description: Zip path for the compressed folder with the lambda code located in local S3.
     Type: String
 
-  SnsFailureSummaryTopicARN:
-    Type: String
-    Description: SNS topic to post summary message on failure case
-
-  SnsSuccessSummaryTopicARN:
-    Type: String
-    Description: SNS topic to post summary message on success case
-
-  SimTableARN:
-    Description: DynamoDB ARN to store SIMs data.
-    Type: String
-
   SimsTableName:
     Type: String
     Default: sim-metastore
     Description: DynamoDB table name to store SIMs data
+
+  SimTableArn:
+    Description: DynamoDB ARN to store SIMs data.
+    Type: String
 
   S3LocalBucketArn:
     Description: Arn for S3 bucket used to store the lambda code on customers account.
@@ -41,7 +33,15 @@ Parameters:
     Description: Name of S3 bucket used to store the lambda code on customers account.
     Type: String
 
-  SqsQueueARN:
+  SnsSuccessSummaryTopicArn:
+    Type: String
+    Description: SNS topic to post summary message on success case
+
+  SnsFailureSummaryTopicArn:
+    Type: String
+    Description: SNS topic to post summary message on failure case
+
+  SqsQueueArn:
     Description: SQS queue ARN
     Type: String
 
@@ -78,18 +78,18 @@ Resources:
                   - sqs:GetQueueAttributes
                   - sqs:ChangeMessageVisibility
                 Resource:
-                  Ref: SqsQueueARN
+                  Ref: SqsQueueArn
               - Effect: Allow
                 Action:
                   - sns:Publish
                 Resource:
-                  - Ref: SnsSuccessSummaryTopicARN
-                  - Ref: SnsFailureSummaryTopicARN
+                  - Ref: SnsSuccessSummaryTopicArn
+                  - Ref: SnsFailureSummaryTopicArn
               - Effect: Allow
                 Action:
                   - dynamodb:UpdateItem
                 Resource:
-                  Ref: SimTableARN
+                  Ref: SimTableArn
               - Effect: Allow
                 Action:
                   - s3:GetObject
@@ -107,9 +107,9 @@ Resources:
       Environment:
         Variables:
           SNS_FAILURE_SUMMARY_TOPIC:
-            Ref: SnsFailureSummaryTopicARN
+            Ref: SnsFailureSummaryTopicArn
           SNS_SUCCESS_SUMMARY_TOPIC:
-            Ref: SnsSuccessSummaryTopicARN
+            Ref: SnsSuccessSummaryTopicArn
           SIMS_TABLE:
             Ref: SimsTableName
       FunctionName:
@@ -139,7 +139,7 @@ Resources:
       BatchSize: 10
       Enabled: true
       EventSourceArn:
-        Ref: SqsQueueARN
+        Ref: SqsQueueArn
       FunctionName:
         Ref: LambdaName
     DependsOn: LambdaDisableSimFunction

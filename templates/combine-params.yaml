@@ -60,6 +60,12 @@ Outputs:
 #            Fn::Sub: iotcore-policy-generator-policy-${AWS::Region}
     Value: !Sub "iotcore-policy-${ProjectName}-${BackendEnv}"
 
+  IotcorePolicyGeneratorFunctionName:
+    Value: !Sub "iotcore-policy-generator-${ProjectName}-${BackendEnv}"
+
+  IotcoreEndpointProviderFunctionName:
+    Value: !Sub "iotcore-endpoint-url-provider-${ProjectName}-${BackendEnv}"
+
 #  SimRetrievalLambdaName:
 #    Fn::Join:
 #      - ""
@@ -85,25 +91,29 @@ Outputs:
 #        - !Ref BackendEnv
 #        - .zip
   SimRetrievalLambdaZipPath:
-    Value: !Sub "${CodebaseVersion}/${SimRetrievalLambdaNameBase}-${ProjectName}-${BackendEnv}.zip"
+#    Value: !Sub "${CodebaseVersion}/${SimRetrievalLambdaNameBase}-${ProjectName}-${BackendEnv}.zip"
+    Value: !Sub "${CodebaseVersion}/lambda/sim-retrieval.zip"
 
   CreateSimLambdaName:
     Value: !Sub "${CreateSimLambdaNameBase}-${ProjectName}-${BackendEnv}"
 
   CreateSimLambdaZipPath:
-    Value: !Sub "${CodebaseVersion}/${CreateSimLambdaNameBase}-${ProjectName}-${BackendEnv}.zip"
+#    Value: !Sub "${CodebaseVersion}/${CreateSimLambdaNameBase}-${ProjectName}-${BackendEnv}.zip"
+    Value: !Sub "${CodebaseVersion}/lambda/create-sim.zip"
 
   DisableSimLambdaName:
     Value: !Sub "${DisableSimLambdaNameBase}-${ProjectName}-${BackendEnv}"
 
   DisableSimLambdaZipPath:
-    Value: !Sub "${CodebaseVersion}/${DisableSimLambdaNameBase}-${ProjectName}-${BackendEnv}.zip"
+#    Value: !Sub "${CodebaseVersion}/${DisableSimLambdaNameBase}-${ProjectName}-${BackendEnv}.zip"
+    Value: !Sub "${CodebaseVersion}/lambda/disable-sim.zip"
 
   DeviceOnboardingLambdaName:
     Value: !Sub "${DeviceOnboardingLambdaNameBase}-${ProjectName}-${BackendEnv}"
 
   DeviceOnboardingLambdaZipPath:
-    Value: !Sub "${CodebaseVersion}/${DeviceOnboardingLambdaNameBase}-${ProjectName}-${BackendEnv}.zip"
+#    Value: !Sub "${CodebaseVersion}/${DeviceOnboardingLambdaNameBase}-${ProjectName}-${BackendEnv}.zip"
+    Value: !Sub "${CodebaseVersion}/lambda/device-onboarding.zip"
 
   OnboardingApiKeyName:
     Value: !Sub "device-onboarding-key-${ProjectName}-${BackendEnv}"

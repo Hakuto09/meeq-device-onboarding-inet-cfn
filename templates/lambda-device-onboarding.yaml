@@ -16,20 +16,20 @@ Parameters:
     Description: Zip path for the compressed folder with the lambda code located in local S3.
     Type: String
 
-  S3LocalBucketArn:
-    Description: Arn for S3 bucket used to store the lambda code on customers account.
+  SimTableName:
+    Description: Dynamo DB SIMs table name
+    Type: String
+
+  SimTableArn:
+    Description: Dynamo DB SIMs table ARN
     Type: String
 
   S3LocalBucketName:
     Description: Name of S3 bucket used to store the lambda code on customers account.
     Type: String
 
-  SimTableARN:
-    Description: Dynamo DB SIMs table ARN
-    Type: String
-
-  SimTableName:
-    Description: Dynamo DB SIMs table name
+  S3LocalBucketArn:
+    Description: Arn for S3 bucket used to store the lambda code on customers account.
     Type: String
 
   AmazonRootCaURL:
@@ -37,7 +37,7 @@ Parameters:
     Type: String
     Default: https://www.amazontrust.com/repository/AmazonRootCA1.pem
 
-  IoTCoreEndpointURL:
+  IotcoreEndpointUrl:
     Description: URL of IoT Core Endpoint
     Type: String
 
@@ -71,7 +71,7 @@ Resources:
               - Effect: Allow
                 Action: dynamodb:GetItem
                 Resource:
-                  Ref: SimTableARN
+                  Ref: SimTableArn
               - Effect: Allow
                 Action:
                   - s3:GetObject
@@ -94,7 +94,7 @@ Resources:
           SIMS_TABLE:
             Ref: SimTableName
           IOT_CORE_ENDPOINT_URL:
-            Ref: IoTCoreEndpointURL
+            Ref: IotcoreEndpointUrl
       FunctionName:
         Ref: LambdaName
       Handler: index.handler
@@ -122,12 +122,12 @@ Outputs:
   #                 CloudFormation Outputs
   #
   #=======================================================
-  LambdaNameDeviceOnboarding:
+  LambdaDeviceOnboardingName:
     Description: The name of the Device Onboarding lambda
     Value:
       Ref: LambdaDeviceOnboardingFunction
 
-  LambdaARNDeviceOnboarding:
+  LambdaDeviceOnboardingArn:
     Description: Lambda ARN for Device Onboarding
     Value:
       Fn::GetAtt:
