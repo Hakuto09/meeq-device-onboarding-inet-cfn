@@ -54,7 +54,11 @@ Resources:    # Resourcesが無いとエラーが出るためにダミーリソ�
       
 Outputs:
   CodebaseBucketUrl:
+<<<<<<<< HEAD:templates/combine-params.yaml_20250410r01-003
     Value: !Sub "https://${ProjectName}-cfn-templates-${BackendEnv}.s3-${CodebaseBucketRegion}.amazonaws.com/${CodebaseVersion}"
+========
+    !Sub "https://${ProjectName}-cfn-templates-${BackendEnv}.s3-${CodebaseBucketRegion}.amazonaws.com/${CodebaseVersion}"
+>>>>>>>> origin/main:templates/combine-params.yaml_20250410r01-001
 
 #  SimRetrievalLambdaName:
 #    Fn::Join:
