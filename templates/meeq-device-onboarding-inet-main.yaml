@@ -58,6 +58,9 @@ Parameters:
     Type: String
     AllowedValues:
       - dev
+      - testaa
+      - testbb
+      - testcc
       - staging
       - prod
 
@@ -266,7 +269,7 @@ Resources:
         IotcorePolicyName:
           Fn::GetAtt:
             - IotcorePolicyStack
-            - Outputs.IotcorePolicyName
+            - Outputs.IotcoreCreatedPolicyName
         SnsFailureSummaryTopicArn:
           Fn::GetAtt:
             - SnsResourcesStack
